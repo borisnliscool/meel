@@ -34,15 +34,12 @@ fn get_template_file(template_name: String) -> Result<File, String> {
 
 fn apply_layout(path: String, contents: String) -> Result<String, String> {
     let root = Path::new(get_template_directory());
-
-    let joined_path = format!("{}/{}", get_template_directory(), &path);
-    let path = Path::new(&joined_path);
+    let path = Path::new(&path);
 
     let mut components = path.components();
     components.next_back();
 
     let layout_path = format!("{}/layout.meel", components.as_path().display());
-    println!("Layout path: {}", components.as_path().display());
 
     let mut layout_file = match File::open(&layout_path) {
         Ok(file) => file,
@@ -55,7 +52,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
         Err(_) => return Err("Failed to read layout file".to_string())
     };
 
-    let re = match Regex::new(r"(\\<slot( ?)\\/\\>|(\\<slot\\>(.|\n)*<\\/slot>))") {
+    let re = match Regex::new(r"<slot( ?)/>|<slot>(.*?)</slot>") {
         Ok(re) => re,
         Err(_) => return Err("Failed to compile regex".to_string())
     };
@@ -65,7 +62,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
     if root.eq(components.as_path()) {
         Ok(result)
     } else {
-        apply_layout(format!("./{}", path.parent().unwrap().to_str().unwrap()), result)
+        apply_layout(components.as_path().display().to_string(), result)
     }
 }
 
@@ -80,7 +77,7 @@ pub fn render_template(template_name: String, data: Option<HashMap<String, Strin
         Err(_) => return Err("Failed to read template file".to_string())
     };
 
-    contents = apply_layout(template_name, contents)?;
+    contents = apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?;
 
     // Loop over the data, and apply it to the template
     for (key, value) in data.into_iter() {
