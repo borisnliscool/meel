@@ -57,6 +57,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
         Err(_) => return Err("Failed to compile regex".to_string())
     };
 
+    // TODO: the indenting isn't correct
     let result = re.replace_all(&layout_contents, &contents).to_string();
 
     if root.eq(components.as_path()) {
@@ -67,7 +68,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
 }
 
 // TODO: It would be nice to make this "data" parameter optional in the future.
-pub fn render_template(template_name: String, data: Option<HashMap<String, String>>) -> Result<String, String> {
+pub fn render(template_name: String, data: Option<HashMap<String, String>>) -> Result<String, String> {
     let data = data.unwrap_or_default();
     let mut file = get_template_file(template_name.clone())?;
 
