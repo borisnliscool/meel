@@ -5,10 +5,12 @@ use std::path::Path;
 
 use regex::Regex;
 
-fn get_template_directory() -> &'static str {
+/// Get the root template directory, relative to the current working directory.
+fn get_root_template_directory() -> &'static str {
     "./data/templates"
 }
 
+/// Get a template file based on the name. The name may contain a directory path.
 fn get_template_file(template_name: String) -> Result<File, String> {
     if template_name.is_empty() {
         return Err("Template name cannot be empty".to_string());
@@ -24,32 +26,38 @@ fn get_template_file(template_name: String) -> Result<File, String> {
         format!("{}.meel", template_name)
     };
 
-    let path = format!("{}/{}", get_template_directory(), name);
+    let template_path = format!("{}/{}", get_root_template_directory(), name);
 
-    match File::open(path) {
+    match File::open(template_path) {
         Ok(file) => Ok(file),
         Err(_) => Err(format!("Template {} not found", name))
     }
 }
 
+/// Recursively apply the layout to the template until the root layout is reached.
 fn apply_layout(path: String, contents: String) -> Result<String, String> {
-    let root = Path::new(get_template_directory());
-    let path = Path::new(&path);
+    let root = Path::new(get_root_template_directory());
 
-    let mut components = path.components();
-    components.next_back();
-
-    let layout_path = format!("{}/layout.meel", components.as_path().display());
-
-    let mut layout_file = match File::open(&layout_path) {
-        Ok(file) => file,
-        Err(_) => return Err(format!("Layout {} not found", layout_path).to_string())
+    let parent = match Path::new(&path).parent() {
+        Some(parent) => parent,
+        None => return Err("Failed to get parent directory".to_string())
     };
 
-    let mut layout_contents = String::new();
-    match layout_file.read_to_string(&mut layout_contents) {
-        Ok(_) => (),
-        Err(_) => return Err("Failed to read layout file".to_string())
+    let layout_path = format!("{}/layout.meel", parent.display());
+
+    let layout_contents = if Path::new(&layout_path).exists() {
+        let mut layout_file = match File::open(&layout_path) {
+            Ok(file) => file,
+            Err(_) => return Err("Failed to open layout file".to_string())
+        };
+
+        let mut layout_contents = String::new();
+        match layout_file.read_to_string(&mut layout_contents) {
+            Ok(_) => layout_contents,
+            Err(_) => return Err("Failed to read layout file".to_string())
+        }
+    } else {
+        "<slot />".to_string()
     };
 
     let re = match Regex::new(r"<slot( ?)/>|<slot>(.*?)</slot>") {
@@ -57,17 +65,19 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
         Err(_) => return Err("Failed to compile regex".to_string())
     };
 
-    // TODO: the indenting isn't correct
+    // TODO: The indenting isn't correct for nested slots.
     let result = re.replace_all(&layout_contents, &contents).to_string();
 
-    if root.eq(components.as_path()) {
+    if root.eq(parent) {
         Ok(result)
     } else {
-        apply_layout(components.as_path().display().to_string(), result)
+        apply_layout(parent.display().to_string(), result)
     }
 }
 
-// TODO: It would be nice to make this "data" parameter optional in the future.
+// TODO: It would be nice to make this "data" parameter optional in the future with defaults.
+
+/// Render a template with the given data.
 pub fn render(template_name: String, data: Option<HashMap<String, String>>) -> Result<String, String> {
     let data = data.unwrap_or_default();
     let mut file = get_template_file(template_name.clone())?;
@@ -78,7 +88,7 @@ pub fn render(template_name: String, data: Option<HashMap<String, String>>) -> R
         Err(_) => return Err("Failed to read template file".to_string())
     };
 
-    contents = apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?;
+    contents = apply_layout(format!("{}/{}", get_root_template_directory(), &template_name), contents)?;
 
     // Loop over the data, and apply it to the template
     for (key, value) in data.into_iter() {
