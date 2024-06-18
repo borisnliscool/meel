@@ -5,10 +5,7 @@ use std::path::Path;
 
 use regex::Regex;
 
-/// Get the root template directory, relative to the current working directory.
-fn get_root_template_directory() -> &'static str {
-    "./data/templates"
-}
+const ROOT_TEMPLATE_DIRECTORY: &str = "./data/templates";
 
 /// Get a template file based on the name. The name may contain a directory path.
 fn get_template_file(template_name: String) -> Result<File, String> {
@@ -26,7 +23,7 @@ fn get_template_file(template_name: String) -> Result<File, String> {
         format!("{}.meel", template_name)
     };
 
-    let template_path = format!("{}/{}", get_root_template_directory(), name);
+    let template_path = format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, name);
 
     match File::open(template_path) {
         Ok(file) => Ok(file),
@@ -36,7 +33,7 @@ fn get_template_file(template_name: String) -> Result<File, String> {
 
 /// Recursively apply the layout to the template until the root layout is reached.
 fn apply_layout(path: String, contents: String) -> Result<String, String> {
-    let root_template_path = Path::new(get_root_template_directory());
+    let root_template_path = Path::new(ROOT_TEMPLATE_DIRECTORY);
 
     let template_parent_path = match Path::new(&path).parent() {
         Some(parent) => parent,
@@ -85,7 +82,7 @@ pub fn render(template_name: String, data: HashMap<String, String>) -> Result<St
         Err(_) => return Err("Failed to read template file".to_string())
     };
 
-    contents = apply_layout(format!("{}/{}", get_root_template_directory(), &template_name), contents)?;
+    contents = apply_layout(format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, &template_name), contents)?;
 
     // Loop over the data, and apply it to the template
     for (key, value) in data.into_iter() {
