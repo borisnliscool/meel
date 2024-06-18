@@ -36,14 +36,14 @@ fn get_template_file(template_name: String) -> Result<File, String> {
 
 /// Recursively apply the layout to the template until the root layout is reached.
 fn apply_layout(path: String, contents: String) -> Result<String, String> {
-    let root = Path::new(get_root_template_directory());
+    let root_template_path = Path::new(get_root_template_directory());
 
-    let parent = match Path::new(&path).parent() {
+    let template_parent_path = match Path::new(&path).parent() {
         Some(parent) => parent,
         None => return Err("Failed to get parent directory".to_string())
     };
 
-    let layout_path = format!("{}/layout.meel", parent.display());
+    let layout_path = format!("{}/layout.meel", template_parent_path.display());
 
     let layout_contents = if Path::new(&layout_path).exists() {
         let mut layout_file = match File::open(&layout_path) {
@@ -68,18 +68,15 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
     // TODO: The indenting isn't correct for nested slots.
     let result = re.replace_all(&layout_contents, &contents).to_string();
 
-    if root.eq(parent) {
+    if root_template_path.eq(template_parent_path) {
         Ok(result)
     } else {
-        apply_layout(parent.display().to_string(), result)
+        apply_layout(template_parent_path.display().to_string(), result)
     }
 }
 
-// TODO: It would be nice to make this "data" parameter optional in the future with defaults.
-
 /// Render a template with the given data.
-pub fn render(template_name: String, data: Option<HashMap<String, String>>) -> Result<String, String> {
-    let data = data.unwrap_or_default();
+pub fn render(template_name: String, data: HashMap<String, String>) -> Result<String, String> {
     let mut file = get_template_file(template_name.clone())?;
 
     let mut contents = String::new();
@@ -92,7 +89,8 @@ pub fn render(template_name: String, data: Option<HashMap<String, String>>) -> R
 
     // Loop over the data, and apply it to the template
     for (key, value) in data.into_iter() {
-        contents = contents.replace(&format!("{{{}}}", key), &value);
+        let re = Regex::new(&format!(r"\{{\{{\s*{}\s*\}}\}}", key)).unwrap();
+        contents = re.replace_all(&contents, value).to_string();
     }
 
     Ok(contents)
