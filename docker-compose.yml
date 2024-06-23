@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    env_file:
+      - .env
+
+  meel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8080:3000
+    env_file:
+      - .env
+    depends_on:
+      - db

@@ -1,3 +1,5 @@
+use std::env;
+
 use dotenvy::dotenv;
 use tokio::net::TcpListener;
 
@@ -17,9 +19,10 @@ async fn main() {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    let listener = TcpListener::bind("127.0.0.1:8080").await.expect("Failed to bind to port 8080");
+    let address = env::var("MEEL_HOST").unwrap_or("meel:3000".to_string());
+    let listener = TcpListener::bind(address.clone()).await.expect("Failed to bind address");
 
-    tracing::info!("Listening on http://127.0.0.1:8080");
+    tracing::info!("Listening on {}", address);
     let server = server::create_server().await;
     axum::serve(listener, server).await.expect("Failed to start server");
 }

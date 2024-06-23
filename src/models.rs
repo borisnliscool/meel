@@ -7,6 +7,7 @@ use crate::schema::mails;
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = mails)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+#[allow(dead_code)]
 pub struct Mail {
     pub id: i32,
     pub created_at: Option<SystemTime>,
