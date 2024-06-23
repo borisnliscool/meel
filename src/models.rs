@@ -19,6 +19,7 @@ pub struct Mail {
     pub send_attempts: i32,
     pub priority: i32,
     pub sent_at: Option<SystemTime>,
+    pub scheduled_at: SystemTime,
 }
 
 #[derive(Insertable)]
@@ -31,4 +32,5 @@ pub struct NewMail<'a> {
     pub text_body: &'a str,
     pub send_attempts: i32,
     pub priority: i32,
+    pub scheduled_at: SystemTime,
 }

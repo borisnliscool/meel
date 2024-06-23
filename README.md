@@ -4,8 +4,8 @@
 
 - [x] Templating engine
 - API Routes
-    - [ ] Sending mail
-    - [ ] Scheduling mail
+    - [x] Sending mail
+    - [x] Scheduling mail
     - [ ] Fetching mail status
     - [ ] Fetch templates list
 - Configuration

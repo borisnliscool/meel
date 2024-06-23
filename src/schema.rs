@@ -25,6 +25,7 @@ diesel::table! {
         send_attempts -> Int4,
         priority -> Int4,
         sent_at -> Nullable<Timestamp>,
+        scheduled_at -> Timestamp,
     }
 }
 
