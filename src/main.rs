@@ -1,10 +1,17 @@
+use dotenvy::dotenv;
 use tokio::net::TcpListener;
 
 mod templating;
 mod server;
+mod database;
+mod schema;
+mod models;
+mod routes;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
+
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
