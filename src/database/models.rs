@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use diesel::prelude::*;
 
-use crate::schema::mails;
+use crate::database::schema::mails;
 
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = mails)]

@@ -6,8 +6,6 @@ use tokio::net::TcpListener;
 mod templating;
 mod server;
 mod database;
-mod schema;
-mod models;
 mod routes;
 mod utils;
 

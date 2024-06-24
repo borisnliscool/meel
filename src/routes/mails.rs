@@ -8,7 +8,7 @@ use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use serde::{Deserialize, Serialize};
 
 use crate::{database, templating, utils};
-use crate::models::{Mail, NewMail};
+use crate::database::models::{Mail, NewMail};
 
 #[derive(Deserialize)]
 pub struct SendMailRequest {
@@ -35,7 +35,7 @@ impl SendMailResponse {
 }
 
 pub async fn send_mail(Json(payload): Json<SendMailRequest>) -> Result<Json<SendMailResponse>, StatusCode> {
-    use crate::schema::mails;
+    use crate::database::schema::mails;
 
     let html_body_string = templating::render(payload.template, payload.data).unwrap();
 
@@ -45,7 +45,7 @@ pub async fn send_mail(Json(payload): Json<SendMailRequest>) -> Result<Json<Send
             None => return Err(StatusCode::BAD_REQUEST),
         };
 
-        match utils::iso_string_to_system_time(iso_string) {
+        match utils::time::iso_string_to_system_time(iso_string) {
             Ok(scheduled_at) => scheduled_at,
             Err(_) => return Err(StatusCode::BAD_REQUEST),
         }
@@ -101,15 +101,15 @@ impl GetMailStatusResponse {
             recipient: mail.recipient,
             send_attempts: mail.send_attempts,
             priority: mail.priority,
-            scheduled_at: utils::system_time_to_iso_string(mail.scheduled_at),
-            sent_at: mail.sent_at.map(utils::system_time_to_iso_string),
+            scheduled_at: utils::time::system_time_to_iso_string(mail.scheduled_at),
+            sent_at: mail.sent_at.map(utils::time::system_time_to_iso_string),
             sent: mail.sent_at.is_some(),
         }
     }
 }
 
 pub async fn get_mail_status(Path(mail_id): Path<i32>) -> Result<Json<GetMailStatusResponse>, StatusCode> {
-    use crate::schema::mails;
+    use crate::database::schema::mails;
 
     let mut conn = database::establish_connection();
 
