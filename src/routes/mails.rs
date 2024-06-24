@@ -24,12 +24,27 @@ pub struct SendMailRequest {
 #[derive(Serialize)]
 pub struct SendMailResponse {
     id: i32,
+    sender: String,
+    recipient: String,
+    send_attempts: i32,
+    priority: i32,
+    scheduled_at: String,
+    sent_at: Option<String>,
+    sent: bool,
+    // TODO: attachment information
 }
 
 impl SendMailResponse {
     fn new(mail: Mail) -> Self {
         Self {
             id: mail.id,
+            sender: mail.sender,
+            recipient: mail.recipient,
+            send_attempts: mail.send_attempts,
+            priority: mail.priority,
+            scheduled_at: utils::time::system_time_to_iso_string(mail.scheduled_at),
+            sent_at: mail.sent_at.map(utils::time::system_time_to_iso_string),
+            sent: mail.sent_at.is_some(),
         }
     }
 }
@@ -80,35 +95,7 @@ pub async fn send_mail(Json(payload): Json<SendMailRequest>) -> Result<Json<Send
     Ok(Json(SendMailResponse::new(created_mail)))
 }
 
-#[derive(Serialize)]
-pub struct GetMailStatusResponse {
-    id: i32,
-    sender: String,
-    recipient: String,
-    send_attempts: i32,
-    priority: i32,
-    scheduled_at: String,
-    sent_at: Option<String>,
-    sent: bool,
-    // TODO: attachment information
-}
-
-impl GetMailStatusResponse {
-    fn new(mail: Mail) -> Self {
-        Self {
-            id: mail.id,
-            sender: mail.sender,
-            recipient: mail.recipient,
-            send_attempts: mail.send_attempts,
-            priority: mail.priority,
-            scheduled_at: utils::time::system_time_to_iso_string(mail.scheduled_at),
-            sent_at: mail.sent_at.map(utils::time::system_time_to_iso_string),
-            sent: mail.sent_at.is_some(),
-        }
-    }
-}
-
-pub async fn get_mail_status(Path(mail_id): Path<i32>) -> Result<Json<GetMailStatusResponse>, StatusCode> {
+pub async fn get_mail_status(Path(mail_id): Path<i32>) -> Result<Json<SendMailResponse>, StatusCode> {
     use crate::database::schema::mails;
 
     let mut conn = database::establish_connection();
@@ -120,5 +107,5 @@ pub async fn get_mail_status(Path(mail_id): Path<i32>) -> Result<Json<GetMailSta
         Err(_) => return Err(StatusCode::NOT_FOUND),
     };
 
-    Ok(Json(GetMailStatusResponse::new(mail)))
+    Ok(Json(SendMailResponse::new(mail)))
 }
