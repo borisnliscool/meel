@@ -71,7 +71,10 @@ pub async fn send_mail(Json(payload): Json<SendMailRequest>) -> Result<Json<Send
         .returning(Mail::as_returning())
         .get_result(&mut conn) {
         Ok(created_mail) => created_mail,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => {
+            tracing::error!("{}", err);
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
     };
 
     Ok(Json(SendMailResponse::new(created_mail)))

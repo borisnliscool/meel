@@ -23,6 +23,6 @@ async fn main() {
     let listener = TcpListener::bind(address.clone()).await.expect("Failed to bind address");
 
     tracing::info!("Listening on {}", address);
-    let server = server::create_server().await;
+    let server = server::create().await;
     axum::serve(listener, server).await.expect("Failed to start server");
 }
