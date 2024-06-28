@@ -49,13 +49,13 @@ impl SendMailResponse {
     }
 }
 
-pub async fn send_mail(Json(payload): Json<SendMailRequest>) -> Result<Json<SendMailResponse>, StatusCode> {
+async fn send_mail(mail: SendMailRequest) -> Result<Mail, StatusCode> {
     use crate::database::schema::mails;
 
-    let html_body_string = templating::render(payload.template, payload.data).unwrap();
+    let html_body_string = templating::render(mail.template, mail.data).unwrap();
 
-    let scheduled_at = if payload.schedule_at.is_some() {
-        let iso_string = match payload.schedule_at.as_ref() {
+    let scheduled_at = if mail.schedule_at.is_some() {
+        let iso_string = match mail.schedule_at.as_ref() {
             Some(iso_string) => iso_string,
             None => return Err(StatusCode::BAD_REQUEST),
         };
@@ -69,30 +69,48 @@ pub async fn send_mail(Json(payload): Json<SendMailRequest>) -> Result<Json<Send
     };
 
     let new_mail = NewMail {
-        sender: &payload.sender,
-        recipient: &payload.recipient,
+        sender: &mail.sender,
+        recipient: &mail.recipient,
         subject: "", // TODO: parse from template
         html_body: &html_body_string,
         text_body: "", // TODO: parse text body from template
         send_attempts: 0,
-        priority: payload.priority,
+        priority: mail.priority,
         scheduled_at,
     };
 
     let mut conn = database::establish_connection();
 
-    let created_mail = match diesel::insert_into(mails::table)
+    match diesel::insert_into(mails::table)
         .values(&new_mail)
         .returning(Mail::as_returning())
         .get_result(&mut conn) {
-        Ok(created_mail) => created_mail,
+        Ok(created_mail) => Ok(created_mail),
         Err(err) => {
             tracing::error!("{}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
-    };
+    }
+}
 
-    Ok(Json(SendMailResponse::new(created_mail)))
+pub async fn send_mails(Json(payload): Json<Vec<SendMailRequest>>) -> Result<Json<Vec<SendMailResponse>>, StatusCode> {
+    let mut mails: Vec<Mail> = vec![];
+
+    for mail_payload in payload {
+        let created_mail = match send_mail(mail_payload).await {
+            Ok(created_mail) => created_mail,
+            Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        };
+
+        mails.push(created_mail);
+    }
+
+    Ok(Json(
+        mails
+            .into_iter()
+            .map(SendMailResponse::new)
+            .collect()
+    ))
 }
 
 pub async fn get_mail_status(Path(mail_id): Path<i32>) -> Result<Json<SendMailResponse>, StatusCode> {
