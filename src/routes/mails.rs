@@ -4,6 +4,7 @@ use std::time::SystemTime;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::Json;
+use axum::response::Html;
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use serde::{Deserialize, Serialize};
 
@@ -126,4 +127,19 @@ pub async fn get_mail_status(Path(mail_id): Path<i32>) -> Result<Json<SendMailRe
     };
 
     Ok(Json(SendMailResponse::new(mail)))
+}
+
+pub async fn get_mail_body(Path(mail_id): Path<i32>) -> Result<Html<String>, StatusCode> {
+    use crate::database::schema::mails;
+    
+    let mut conn = database::establish_connection();
+    
+    let mail = match mails::table
+        .find(mail_id)
+        .first::<Mail>(&mut conn) {
+        Ok(mail) => mail,
+        Err(_) => return Err(StatusCode::NOT_FOUND),
+    };
+    
+    Ok(Html(mail.html_body))
 }

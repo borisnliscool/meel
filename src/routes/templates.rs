@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::Json;
+use axum::response::Html;
 use serde::Serialize;
 
 use crate::templating;
@@ -17,9 +18,9 @@ pub async fn get_templates() -> Result<Json<Vec<Template>>, StatusCode> {
     Ok(Json(vec![]))
 }
 
-pub async fn render_template(Path(template_name): Path<String>, Json(data): Json<HashMap<String, String>>) -> Result<String, StatusCode> {
+pub async fn render_template(Path(template_name): Path<String>, Json(data): Json<HashMap<String, String>>) -> Result<Html<String>, StatusCode> {
     match templating::render(template_name, data) {
-        Ok(html) => Ok(html),
+        Ok(html) => Ok(Html(html)),
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
