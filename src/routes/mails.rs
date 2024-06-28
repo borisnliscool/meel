@@ -53,7 +53,11 @@ impl SendMailResponse {
 async fn send_mail(mail: SendMailRequest) -> Result<Mail, StatusCode> {
     use crate::database::schema::mails;
 
-    let html_body_string = templating::render(mail.template, mail.data).unwrap();
+    let html_body_string = match templating::render(mail.template.clone(), mail.data.clone()) { 
+        Ok(html_body_string) => html_body_string,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+    let plain_text_string = templating::render_plain_text(mail.template, mail.data).unwrap_or_else(|_| "".to_string());
 
     let scheduled_at = if mail.schedule_at.is_some() {
         let iso_string = match mail.schedule_at.as_ref() {
@@ -74,7 +78,7 @@ async fn send_mail(mail: SendMailRequest) -> Result<Mail, StatusCode> {
         recipient: &mail.recipient,
         subject: "", // TODO: parse from template
         html_body: &html_body_string,
-        text_body: "", // TODO: parse text body from template
+        text_body: &plain_text_string,
         send_attempts: 0,
         priority: mail.priority,
         scheduled_at,

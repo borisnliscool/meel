@@ -17,17 +17,20 @@ fn get_template_file(template_name: String) -> Result<File, String> {
         return Err("Template name cannot contain '..'".to_string());
     }
 
-    let name = if template_name.ends_with(".meel") {
-        template_name
-    } else {
-        format!("{}.meel", template_name)
-    };
-
-    let template_path = format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, name);
+    let template_path = format!("{}/{}.meel", ROOT_TEMPLATE_DIRECTORY, template_name);
 
     match File::open(template_path) {
         Ok(file) => Ok(file),
-        Err(_) => Err(format!("Template {} not found", name))
+        Err(_) => Err(format!("Template {} not found", template_name))
+    }
+}
+
+fn get_plain_text_file(template_name: String) -> Result<File, String> {
+    let template_path = format!("{}/{}.txt", ROOT_TEMPLATE_DIRECTORY, template_name);
+
+    match File::open(template_path) {
+        Ok(file) => Ok(file),
+        Err(_) => Err(format!("Template {} not found", template_name))
     }
 }
 
@@ -72,6 +75,19 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
     }
 }
 
+fn apply_placeholders(mut contents: String, data: HashMap<String, String>) -> Result<String, String> {
+    // Loop over the data, and apply it to the template
+    for (key, value) in data.into_iter() {
+        let re = match Regex::new(&format!(r"\{{\{{\s*{}\s*\}}\}}", key)) {
+            Ok(regex) => regex,
+            Err(_) => return Err("Failed to compile regex".to_string())
+        };
+        contents = re.replace_all(&contents, value).to_string();
+    }
+
+    Ok(contents)
+}
+
 /// Render a template with the given data.
 pub fn render(template_name: String, data: HashMap<String, String>) -> Result<String, String> {
     let mut file = get_template_file(template_name.clone())?;
@@ -82,13 +98,20 @@ pub fn render(template_name: String, data: HashMap<String, String>) -> Result<St
         Err(_) => return Err("Failed to read template file".to_string())
     };
 
-    contents = apply_layout(format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, &template_name), contents)?;
+    apply_placeholders(
+        apply_layout(format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, &template_name), contents)?,
+        data,
+    )
+}
 
-    // Loop over the data, and apply it to the template
-    for (key, value) in data.into_iter() {
-        let re = Regex::new(&format!(r"\{{\{{\s*{}\s*\}}\}}", key)).unwrap();
-        contents = re.replace_all(&contents, value).to_string();
-    }
+pub fn render_plain_text(template_name: String, data: HashMap<String, String>) -> Result<String, String> {
+    let mut file = get_plain_text_file(template_name.clone())?;
 
-    Ok(contents)
+    let mut contents = String::new();
+    match file.read_to_string(&mut contents) {
+        Ok(_) => (),
+        Err(_) => return Err("Failed to read template file".to_string())
+    };
+
+    apply_placeholders(contents, data)
 }
