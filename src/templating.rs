@@ -25,6 +25,7 @@ fn get_template_file(template_name: String) -> Result<File, String> {
     }
 }
 
+/// Get a plain text template file based on the name. The name may contain a directory path.
 fn get_plain_text_file(template_name: String) -> Result<File, String> {
     let template_path = format!("{}/{}.txt", ROOT_TEMPLATE_DIRECTORY, template_name);
 
@@ -75,15 +76,19 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
     }
 }
 
+fn create_placeholder_regex() -> Result<Regex, String> {
+    match Regex::new(r"\{\{\s*(.*?)\s*}}") {
+        Ok(re) => Ok(re),
+        Err(_) => Err("Failed to compile regex".to_string())
+    }
+}
+
+/// Apply placeholders to the supplied template contents.
 fn apply_placeholders(mut contents: String, data: HashMap<String, String>) -> Result<String, String> {
-    let re = match Regex::new(r"\{\{\s*(.*?)\s*}}") {
-        Ok(re) => re,
-        Err(_) => return Err("Failed to compile regex".to_string())
-    };
+    let re = create_placeholder_regex()?;
+    let placeholders: Vec<String> = re.find_iter(&contents).map(|m| m.as_str().to_string()).collect();
 
-    let variables: Vec<String> = re.find_iter(&contents).map(|m| m.as_str().to_string()).collect();
-
-    for capture in variables {
+    for capture in placeholders {
         let key = &capture[2..capture.len() - 2].trim().to_string();
         if let Some(value) = data.get(key) {
             contents = contents.replace(&capture, value);
@@ -91,6 +96,22 @@ fn apply_placeholders(mut contents: String, data: HashMap<String, String>) -> Re
     }
 
     Ok(contents)
+}
+
+/// Get the placeholders in a template.
+pub fn get_template_placeholders(template_name: String) -> Result<Vec<String>, String> {
+    let mut file = get_template_file(template_name.clone())?;
+
+    let mut contents = String::new();
+    match file.read_to_string(&mut contents) {
+        Ok(_) => (),
+        Err(_) => return Err("Failed to read template file".to_string())
+    };
+
+    let contents = apply_layout(format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, &template_name), contents)?;
+
+    let re = create_placeholder_regex()?;
+    Ok(re.find_iter(&contents).map(|m| m.as_str()[2..m.len() - 2].trim().to_string()).collect())
 }
 
 /// Render a template with the given data.
@@ -119,21 +140,4 @@ pub fn render_plain_text(template_name: String, data: HashMap<String, String>) -
     };
 
     apply_placeholders(contents, data)
-}
-
-pub fn get_template_vars(template_name: String) -> Result<Vec<String>, String> {
-    let mut file = get_template_file(template_name.clone())?;
-
-    let mut contents = String::new();
-    match file.read_to_string(&mut contents) {
-        Ok(_) => (),
-        Err(_) => return Err("Failed to read template file".to_string())
-    };
-
-    let re = match Regex::new(r"\{\{\s*(.*?)\s*}}") {
-        Ok(re) => re,
-        Err(_) => return Err("Failed to compile regex".to_string())
-    };
-
-    Ok(re.find_iter(&contents).map(|m| m.as_str()[2..m.len() - 2].trim().to_string()).collect())
 }

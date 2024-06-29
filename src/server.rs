@@ -3,7 +3,7 @@ use axum::routing::{get, post};
 use tower_http::trace::TraceLayer;
 
 use crate::routes::mails::{get_mail_body, get_mail_status, send_mails};
-use crate::routes::templates::{get_templates, render_template, render_template_plain_text, get_template_vars};
+use crate::routes::templates::{get_templates, render_template, render_template_plain_text, get_template_placeholders};
 
 pub async fn create() -> Router {
     Router::new()
@@ -14,5 +14,5 @@ pub async fn create() -> Router {
         .route("/templates", get(get_templates))
         .route("/templates/:template_name/render", post(render_template))
         .route("/templates/:template_name/render/plain-text", post(render_template_plain_text))
-        .route("/templates/:template_name/vars", get(get_template_vars))
+        .route("/templates/:template_name/placeholders", get(get_template_placeholders))
 }
