@@ -78,6 +78,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
 fn apply_placeholders(mut contents: String, data: HashMap<String, String>) -> Result<String, String> {
     // Loop over the data, and apply it to the template
     for (key, value) in data.into_iter() {
+        // TODO: Use the other regex here
         let re = match Regex::new(&format!(r"\{{\{{\s*{}\s*\}}\}}", key)) {
             Ok(regex) => regex,
             Err(_) => return Err("Failed to compile regex".to_string())
@@ -114,4 +115,21 @@ pub fn render_plain_text(template_name: String, data: HashMap<String, String>) -
     };
 
     apply_placeholders(contents, data)
+}
+
+pub fn get_template_vars(template_name: String) -> Result<Vec<String>, String> {
+    let mut file = get_template_file(template_name.clone())?;
+
+    let mut contents = String::new();
+    match file.read_to_string(&mut contents) {
+        Ok(_) => (),
+        Err(_) => return Err("Failed to read template file".to_string())
+    };
+
+    let re = match Regex::new(r"\{\{\s*(.*?)\s*}}") {
+        Ok(re) => re,
+        Err(_) => return Err("Failed to compile regex".to_string())
+    };
+
+    Ok(re.find_iter(&contents).map(|m| m.as_str()[2..m.len() - 2].trim().to_string()).collect())
 }
