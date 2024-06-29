@@ -76,14 +76,18 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
 }
 
 fn apply_placeholders(mut contents: String, data: HashMap<String, String>) -> Result<String, String> {
-    // Loop over the data, and apply it to the template
-    for (key, value) in data.into_iter() {
-        // TODO: Use the other regex here
-        let re = match Regex::new(&format!(r"\{{\{{\s*{}\s*\}}\}}", key)) {
-            Ok(regex) => regex,
-            Err(_) => return Err("Failed to compile regex".to_string())
-        };
-        contents = re.replace_all(&contents, value).to_string();
+    let re = match Regex::new(r"\{\{\s*(.*?)\s*}}") {
+        Ok(re) => re,
+        Err(_) => return Err("Failed to compile regex".to_string())
+    };
+
+    let variables: Vec<String> = re.find_iter(&contents).map(|m| m.as_str().to_string()).collect();
+
+    for capture in variables {
+        let key = &capture[2..capture.len() - 2].trim().to_string();
+        if let Some(value) = data.get(key) {
+            contents = contents.replace(&capture, value);
+        }
     }
 
     Ok(contents)
