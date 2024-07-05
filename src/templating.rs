@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use ammonia::clean_text;
 use regex::Regex;
 
 const ROOT_TEMPLATE_DIRECTORY: &str = "./data/templates";
@@ -84,14 +85,15 @@ fn create_placeholder_regex() -> Result<Regex, String> {
 }
 
 /// Apply placeholders to the supplied template contents.
-fn apply_placeholders(mut contents: String, data: HashMap<String, String>) -> Result<String, String> {
+fn apply_placeholders(mut contents: String, data: HashMap<String, String>, allow_html: bool) -> Result<String, String> {
     let re = create_placeholder_regex()?;
     let placeholders: Vec<String> = re.find_iter(&contents).map(|m| m.as_str().to_string()).collect();
 
     for capture in placeholders {
         let key = &capture[2..capture.len() - 2].trim().to_string();
         if let Some(value) = data.get(key) {
-            contents = contents.replace(&capture, value);
+            let replacement = if allow_html { value.clone() } else { clean_text(value) };
+            contents = contents.replace(&capture, &replacement);
         }
     }
 
@@ -115,7 +117,7 @@ pub fn get_template_placeholders(template_name: String) -> Result<Vec<String>, S
 }
 
 /// Render a template with the given data.
-pub fn render(template_name: String, data: HashMap<String, String>) -> Result<String, String> {
+pub fn render(template_name: String, data: HashMap<String, String>, allow_html: bool) -> Result<String, String> {
     let mut file = get_template_file(template_name.clone())?;
 
     let mut contents = String::new();
@@ -127,6 +129,7 @@ pub fn render(template_name: String, data: HashMap<String, String>) -> Result<St
     apply_placeholders(
         apply_layout(format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, &template_name), contents)?,
         data,
+        allow_html,
     )
 }
 
@@ -139,5 +142,5 @@ pub fn render_plain_text(template_name: String, data: HashMap<String, String>) -
         Err(_) => return Err("Failed to read template file".to_string())
     };
 
-    apply_placeholders(contents, data)
+    apply_placeholders(contents, data, false)
 }

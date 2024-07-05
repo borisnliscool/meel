@@ -18,6 +18,7 @@ pub struct SendMailRequest {
     template: String,
     priority: i32,
     data: HashMap<String, String>,
+    allow_html: Option<bool>,
     schedule_at: Option<String>,
     // TODO: attachments
 }
@@ -53,7 +54,7 @@ impl SendMailResponse {
 async fn send_mail(mail: SendMailRequest) -> Result<Mail, StatusCode> {
     use crate::database::schema::mails;
 
-    let html_body_string = match templating::render(mail.template.clone(), mail.data.clone()) { 
+    let html_body_string = match templating::render(mail.template.clone(), mail.data.clone(), mail.allow_html.unwrap_or(false)) { 
         Ok(html_body_string) => html_body_string,
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };

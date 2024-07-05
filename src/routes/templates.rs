@@ -4,7 +4,7 @@ use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::Json;
 use axum::response::Html;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::templating;
 
@@ -18,8 +18,14 @@ pub async fn get_templates() -> Result<Json<Vec<Template>>, StatusCode> {
     Ok(Json(vec![]))
 }
 
-pub async fn render_template(Path(template_name): Path<String>, Json(data): Json<HashMap<String, String>>) -> Result<Html<String>, StatusCode> {
-    match templating::render(template_name, data) {
+#[derive(Deserialize)]
+pub struct RenderTemplateRequest {
+    data: HashMap<String, String>,
+    allow_html: Option<bool>
+}
+
+pub async fn render_template(Path(template_name): Path<String>, Json(data): Json<RenderTemplateRequest>) -> Result<Html<String>, StatusCode> {
+    match templating::render(template_name, data.data, data.allow_html.unwrap_or(false)) {
         Ok(html) => Ok(Html(html)),
         Err(err) => {
             tracing::error!("{}", err);
