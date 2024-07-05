@@ -1,9 +1,10 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::SystemTime;
 
+use axum::{Extension, Json};
 use axum::extract::Path;
 use axum::http::StatusCode;
-use axum::Json;
 use axum::response::Html;
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use serde::{Deserialize, Serialize};
@@ -51,10 +52,10 @@ impl SendMailResponse {
     }
 }
 
-async fn send_mail(mail: SendMailRequest) -> Result<Mail, StatusCode> {
+async fn send_mail(pool: Extension<Arc<database::Pool>>, mail: SendMailRequest) -> Result<Mail, StatusCode> {
     use crate::database::schema::mails;
 
-    let html_body_string = match templating::render(mail.template.clone(), mail.data.clone(), mail.allow_html.unwrap_or(false)) { 
+    let html_body_string = match templating::render(mail.template.clone(), mail.data.clone(), mail.allow_html.unwrap_or(false)) {
         Ok(html_body_string) => html_body_string,
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
@@ -85,7 +86,10 @@ async fn send_mail(mail: SendMailRequest) -> Result<Mail, StatusCode> {
         scheduled_at,
     };
 
-    let mut conn = database::establish_connection();
+    let mut conn = match pool.get() {
+        Ok(conn) => conn,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
 
     match diesel::insert_into(mails::table)
         .values(&new_mail)
@@ -99,11 +103,11 @@ async fn send_mail(mail: SendMailRequest) -> Result<Mail, StatusCode> {
     }
 }
 
-pub async fn send_mails(Json(payload): Json<Vec<SendMailRequest>>) -> Result<Json<Vec<SendMailResponse>>, StatusCode> {
+pub async fn send_mails(pool: Extension<Arc<database::Pool>>, Json(payload): Json<Vec<SendMailRequest>>) -> Result<Json<Vec<SendMailResponse>>, StatusCode> {
     let mut mails: Vec<Mail> = vec![];
 
     for mail_payload in payload {
-        let created_mail = match send_mail(mail_payload).await {
+        let created_mail = match send_mail(pool.clone(), mail_payload).await {
             Ok(created_mail) => created_mail,
             Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
         };
@@ -119,10 +123,13 @@ pub async fn send_mails(Json(payload): Json<Vec<SendMailRequest>>) -> Result<Jso
     ))
 }
 
-pub async fn get_mail_status(Path(mail_id): Path<i32>) -> Result<Json<SendMailResponse>, StatusCode> {
+pub async fn get_mail_status(pool: Extension<Arc<database::Pool>>, Path(mail_id): Path<i32>) -> Result<Json<SendMailResponse>, StatusCode> {
     use crate::database::schema::mails;
 
-    let mut conn = database::establish_connection();
+    let mut conn = match pool.get() {
+        Ok(conn) => conn,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
 
     let mail = match mails::table
         .find(mail_id)
@@ -134,17 +141,20 @@ pub async fn get_mail_status(Path(mail_id): Path<i32>) -> Result<Json<SendMailRe
     Ok(Json(SendMailResponse::new(mail)))
 }
 
-pub async fn get_mail_body(Path(mail_id): Path<i32>) -> Result<Html<String>, StatusCode> {
+pub async fn get_mail_body(pool: Extension<Arc<database::Pool>>, Path(mail_id): Path<i32>) -> Result<Html<String>, StatusCode> {
     use crate::database::schema::mails;
-    
-    let mut conn = database::establish_connection();
-    
+
+    let mut conn = match pool.get() {
+        Ok(conn) => conn,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+
     let mail = match mails::table
         .find(mail_id)
         .first::<Mail>(&mut conn) {
         Ok(mail) => mail,
         Err(_) => return Err(StatusCode::NOT_FOUND),
     };
-    
+
     Ok(Html(mail.html_body))
 }
