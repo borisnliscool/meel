@@ -9,8 +9,8 @@ use crate::routes::mails::{get_mail_body, get_mail_status, send_mails};
 use crate::routes::templates::{get_template_placeholders, get_templates, render_template, render_template_plain_text};
 
 pub async fn create() -> Router {
-    let pool = database::establish_connection_pool();
-    let shared_pool = Arc::new(pool);
+    let connection_pool = database::establish_connection_pool();
+    let shared_pool = Arc::new(connection_pool);
 
     Router::new()
         .route("/mails/send", post(send_mails))

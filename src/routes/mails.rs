@@ -52,7 +52,7 @@ impl SendMailResponse {
     }
 }
 
-async fn send_mail(pool: Extension<Arc<database::Pool>>, mail: SendMailRequest) -> Result<Mail, StatusCode> {
+async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMailRequest) -> Result<Mail, StatusCode> {
     use crate::database::schema::mails;
 
     let html_body_string = match templating::render(mail.template.clone(), mail.data.clone(), mail.allow_html.unwrap_or(false)) {
@@ -103,7 +103,7 @@ async fn send_mail(pool: Extension<Arc<database::Pool>>, mail: SendMailRequest) 
     }
 }
 
-pub async fn send_mails(pool: Extension<Arc<database::Pool>>, Json(payload): Json<Vec<SendMailRequest>>) -> Result<Json<Vec<SendMailResponse>>, StatusCode> {
+pub async fn send_mails(pool: Extension<Arc<database::ConnectionPool>>, Json(payload): Json<Vec<SendMailRequest>>) -> Result<Json<Vec<SendMailResponse>>, StatusCode> {
     let mut mails: Vec<Mail> = vec![];
 
     for mail_payload in payload {
@@ -123,7 +123,7 @@ pub async fn send_mails(pool: Extension<Arc<database::Pool>>, Json(payload): Jso
     ))
 }
 
-pub async fn get_mail_status(pool: Extension<Arc<database::Pool>>, Path(mail_id): Path<i32>) -> Result<Json<SendMailResponse>, StatusCode> {
+pub async fn get_mail_status(pool: Extension<Arc<database::ConnectionPool>>, Path(mail_id): Path<i32>) -> Result<Json<SendMailResponse>, StatusCode> {
     use crate::database::schema::mails;
 
     let mut conn = match pool.get() {
@@ -141,7 +141,7 @@ pub async fn get_mail_status(pool: Extension<Arc<database::Pool>>, Path(mail_id)
     Ok(Json(SendMailResponse::new(mail)))
 }
 
-pub async fn get_mail_body(pool: Extension<Arc<database::Pool>>, Path(mail_id): Path<i32>) -> Result<Html<String>, StatusCode> {
+pub async fn get_mail_body(pool: Extension<Arc<database::ConnectionPool>>, Path(mail_id): Path<i32>) -> Result<Html<String>, StatusCode> {
     use crate::database::schema::mails;
 
     let mut conn = match pool.get() {
