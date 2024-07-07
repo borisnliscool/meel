@@ -11,7 +11,7 @@ diesel migration run
 - [x] Templating engine
 - API Routes
     - [x] Sending mail
-      - [ ] Send to mailing list
+        - [ ] Send to mailing list
     - [x] Scheduling mail
     - [x] Fetching mail status
     - [ ] Fetch templates list
@@ -19,4 +19,8 @@ diesel migration run
     - [ ] Add email to mailing list
     - [ ] Remove from mailing list
 - Configuration
-    - [ ] Max mails per {time}
+    - [ ] Rate limiting
+    - [ ] Mail server settings
+    - [ ] Logging
+    - [ ] Maximum number of send attempts
+    - [ ] Template storage path
