@@ -48,3 +48,10 @@ pub struct MailingList {
     pub name: String,
     pub description: String,
 }
+
+#[derive(Insertable)]
+#[diesel(table_name = mailing_lists)]
+pub struct NewMailingList<'a> {
+    pub name: &'a str,
+    pub description: &'a str,
+}
