@@ -15,9 +15,11 @@ diesel migration run
     - [x] Scheduling mail
     - [x] Fetching mail status
     - [ ] Fetch templates list
-    - [ ] Create mailing list
-    - [ ] Add email to mailing list
-    - [ ] Remove from mailing list
+    - [ ] Mailing lists
+        - [x] Fetch lists
+        - [ ] Create mailing list
+        - [ ] Add email to mailing list
+        - [ ] Remove from mailing list
 - Configuration
     - [ ] Rate limiting
     - [ ] Mail server settings
