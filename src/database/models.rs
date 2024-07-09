@@ -2,6 +2,7 @@ use std::time::SystemTime;
 
 use diesel::prelude::*;
 
+use crate::database::schema::mailing_list_subscribers;
 use crate::database::schema::mailing_lists;
 use crate::database::schema::mails;
 
@@ -54,4 +55,25 @@ pub struct MailingList {
 pub struct NewMailingList<'a> {
     pub name: &'a str,
     pub description: &'a str,
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = mailing_list_subscribers)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+#[allow(dead_code)]
+pub struct MailingListSubscriber {
+    pub id: i32,
+    pub created_at: Option<SystemTime>,
+    pub updated_at: Option<SystemTime>,
+    pub email: String,
+    pub name: String,
+    pub mailing_list_id: i32,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = mailing_list_subscribers)]
+pub struct NewMailingListSubscriber<'a> {
+    pub email: &'a str,
+    pub name: &'a str,
+    pub mailing_list_id: i32,
 }

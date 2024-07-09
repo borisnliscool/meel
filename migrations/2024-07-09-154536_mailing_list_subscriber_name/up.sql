@@ -1,0 +1,1 @@
+ALTER TABLE mailing_list_subscribers ADD COLUMN name TEXT NOT NULL;

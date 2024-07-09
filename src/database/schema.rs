@@ -19,6 +19,7 @@ diesel::table! {
         updated_at -> Nullable<Timestamp>,
         email -> Text,
         mailing_list_id -> Int4,
+        name -> Text,
     }
 }
 
