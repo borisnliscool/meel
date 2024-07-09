@@ -17,10 +17,10 @@ diesel migration run
     - [ ] Fetch templates list
     - [ ] Mailing lists
         - [x] Fetch lists
-        - [ ] Create mailing list
+        - [x] Create mailing list
         - [ ] Delete mailing lists
         - [ ] Update mailing lists name and description
-        - [ ] Add email to mailing list
+        - [x] Add email to mailing list
         - [ ] Remove from mailing list
 - Configuration
     - [ ] Rate limiting
