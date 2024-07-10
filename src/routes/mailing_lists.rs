@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::{Extension, Json};
 use axum::extract::Path;
 use axum::http::StatusCode;
-use diesel::{RunQueryDsl, SelectableHelper};
+use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use serde::{Deserialize, Serialize};
 
 use crate::database;
@@ -70,6 +70,23 @@ pub async fn create_mailing_list(pool: Extension<Arc<database::ConnectionPool>>,
     };
 
     Ok(Json(MailingListResponse::new(created_mailing_list)))
+}
+
+pub async fn delete_mailing_list(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>) -> Result<StatusCode, StatusCode> {
+    use crate::database::schema::mailing_lists;
+
+    let mut conn = match pool.get() {
+        Ok(conn) => conn,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+
+    match diesel::delete(mailing_lists::table.find(mailing_list_id)).execute(&mut conn) {
+        Ok(_) => Ok(StatusCode::NO_CONTENT),
+        Err(err) => {
+            tracing::error!("{}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR) 
+        },
+    }
 }
 
 #[derive(Deserialize)]

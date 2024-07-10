@@ -18,7 +18,7 @@ diesel migration run
     - [ ] Mailing lists
         - [x] Fetch lists
         - [x] Create mailing list
-        - [ ] Delete mailing lists
+        - [x] Delete mailing lists
         - [ ] Update mailing lists name and description
         - [x] Add email to mailing list
         - [ ] Remove from mailing list
