@@ -5,7 +5,7 @@ use axum::routing::{get, post, delete};
 use tower_http::trace::TraceLayer;
 
 use crate::database;
-use crate::routes::mailing_lists::{create_mailing_list, delete_mailing_list, get_mailing_lists, subscribe_user};
+use crate::routes::mailing_lists::{create_mailing_list, delete_mailing_list, get_mailing_lists, subscribe_user, unsubscribe_user};
 use crate::routes::mails::{get_mail_body, get_mail_status, send_mails};
 use crate::routes::templates::{get_template_placeholders, get_templates, render_template, render_template_plain_text};
 
@@ -27,6 +27,7 @@ pub async fn create() -> Router {
         .route("/mailing-lists", post(create_mailing_list))
         .route("/mailing-lists/:mailing_list_id", delete(delete_mailing_list))
         .route("/mailing-lists/:mailing_list_id/subscribe", post(subscribe_user))
+        .route("/mailing-lists/:mailing_list_id/unsubscribe", post(unsubscribe_user))
 
         .layer(TraceLayer::new_for_http())
         .layer(Extension(shared_pool))

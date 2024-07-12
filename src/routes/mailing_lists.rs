@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::{Extension, Json};
 use axum::extract::Path;
 use axum::http::StatusCode;
-use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 use serde::{Deserialize, Serialize};
 
 use crate::database;
@@ -84,8 +84,8 @@ pub async fn delete_mailing_list(pool: Extension<Arc<database::ConnectionPool>>,
         Ok(_) => Ok(StatusCode::NO_CONTENT),
         Err(err) => {
             tracing::error!("{}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR) 
-        },
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 
@@ -137,5 +137,31 @@ pub async fn subscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Path
     };
 
     Ok(Json(SubscribeUserResponse::new(created_subscriber)))
+}
+
+
+#[derive(Deserialize)]
+pub struct UnsubscribeUserRequest {
+    email: String,
+}
+
+pub async fn unsubscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>, Json(data): Json<UnsubscribeUserRequest>) -> Result<StatusCode, StatusCode> {
+    use crate::database::schema::mailing_list_subscribers;
+
+    let mut conn = match pool.get() {
+        Ok(conn) => conn,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+
+    match diesel::delete(mailing_list_subscribers::table
+        .filter(mailing_list_subscribers::mailing_list_id.eq(mailing_list_id))
+        .filter(mailing_list_subscribers::email.eq(&data.email))
+    ).execute(&mut conn) {
+        Ok(_) => Ok(StatusCode::NO_CONTENT),
+        Err(err) => {
+            tracing::error!("{}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
 }
 
