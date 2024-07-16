@@ -21,7 +21,7 @@ diesel migration run
         - [x] Delete mailing lists
         - [ ] Update mailing lists name and description
         - [x] Add email to mailing list
-        - [ ] Remove from mailing list
+        - [x] Remove from mailing list
 - Configuration
     - [ ] Rate limiting
     - [ ] Mail server settings
