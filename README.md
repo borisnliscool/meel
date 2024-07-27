@@ -9,6 +9,8 @@ diesel migration run
 ### RDD (Readme Driven Development)
 
 - [x] Templating engine
+    - [ ] Component system
+    - [ ] .meel language syntax highlighting
 - API Routes
     - [x] Sending mail
         - [ ] Send to mailing list
