@@ -1,18 +1,15 @@
 use std::sync::Arc;
 
 use axum::{Extension, Router};
-use axum::routing::{get, post, delete};
+use axum::routing::{delete, get, post};
 use tower_http::trace::TraceLayer;
 
-use crate::database;
+use crate::database::ConnectionPool;
 use crate::routes::mailing_lists::{create_mailing_list, delete_mailing_list, get_mailing_lists, subscribe_user, unsubscribe_user};
 use crate::routes::mails::{get_mail_body, get_mail_status, send_mails};
 use crate::routes::templates::{get_template_placeholders, get_templates, render_template, render_template_plain_text};
 
-pub async fn create() -> Router {
-    let connection_pool = database::establish_connection_pool();
-    let shared_pool = Arc::new(connection_pool);
-
+pub async fn create(shared_pool: Arc<ConnectionPool>) -> Router {
     Router::new()
         .route("/mails/send", post(send_mails))
         .route("/mails/:mail_id", get(get_mail_status))
