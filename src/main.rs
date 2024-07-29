@@ -29,7 +29,7 @@ async fn start_mail_scheduler(shared_pool: Arc<ConnectionPool>) {
         mail_scheduler::send_mails(shared_pool.clone()).await;
         
         // TODO: We should make the sleep interval configurable 
-        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
     }
 }
 
