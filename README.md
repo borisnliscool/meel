@@ -12,9 +12,11 @@ diesel migration run
     - [ ] Component system
     - [ ] .meel language syntax highlighting
     - [ ] i18n
+    - [ ] simple if and for logic
 - API Routes
     - [x] Sending mail
         - [ ] Send to mailing list
+        - [ ] File attachments
     - [x] Scheduling mail
     - [x] Fetching mail status
     - [ ] Fetch templates list
