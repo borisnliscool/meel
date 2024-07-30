@@ -11,6 +11,7 @@ diesel migration run
 - [x] Templating engine
     - [ ] Component system
     - [ ] .meel language syntax highlighting
+    - [ ] i18n
 - API Routes
     - [x] Sending mail
         - [ ] Send to mailing list
