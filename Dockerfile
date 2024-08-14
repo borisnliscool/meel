@@ -1,9 +1,9 @@
 FROM rust:1.79-slim-buster
 
 RUN apt-get update
-RUN apt-get install libpq-dev -y
+RUN apt-get install libpq-dev libssl-dev pkg-config -y
 
-COPY ./ ./
+COPY . .
 RUN cargo build --release
 
 EXPOSE 3000
