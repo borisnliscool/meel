@@ -26,10 +26,13 @@ async fn start_mail_scheduler(shared_pool: Arc<ConnectionPool>) {
     tracing::info!("Starting mail scheduler");
 
     loop {
-        mail_scheduler::send_mails(shared_pool.clone()).await;
-        
-        // TODO: We should make the sleep interval configurable 
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        // Move this to a new thread, so it doesn't block loop interval
+        tokio::spawn(mail_scheduler::send_mails(shared_pool.clone()));
+
+        const DEFAULT_SLEEP_INTERVAL: u64 = 15;
+        let sleep_interval = env::var("MEEL_SCHEDULER_INTERVAL").unwrap_or(DEFAULT_SLEEP_INTERVAL.to_string()).parse::<u64>().unwrap_or(DEFAULT_SLEEP_INTERVAL);
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(sleep_interval)).await;
     }
 }
 
