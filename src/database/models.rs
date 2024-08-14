@@ -6,7 +6,7 @@ use crate::database::schema::mailing_list_subscribers;
 use crate::database::schema::mailing_lists;
 use crate::database::schema::mails;
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Clone)]
 #[diesel(table_name = mails)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[allow(dead_code)]

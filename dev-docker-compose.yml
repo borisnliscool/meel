@@ -7,3 +7,10 @@ services:
       - .env
     ports:
       - 5432:5432
+
+  mailhog:
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - 1025:1025
+      - 8025:8025
