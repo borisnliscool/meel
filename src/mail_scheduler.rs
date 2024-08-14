@@ -70,11 +70,14 @@ async fn send_mail(mail: Mail) -> Result<(), String> {
         Ok(email) => email,
         Err(_) => return Err("Failed to parse sender email".to_string())
     };
-    
-    // let sender_email: Mailbox = match mail.reply_to.parse { 
-    //     Ok(email) => email,
-    //     Err(_) => return Err("Failed to parse reply to email".to_string())
-    // };
+
+    let reply_to_email: Mailbox = match mail.reply_to {
+        Some(reply_to) => match reply_to.parse() {
+            Ok(email) => email,
+            Err(_) => return Err("Failed to parse reply to email".to_string())
+        },
+        None => from_email.clone()
+    };
 
     let to_email: Mailbox = match mail.recipient.parse() {
         Ok(email) => email,
@@ -83,7 +86,7 @@ async fn send_mail(mail: Mail) -> Result<(), String> {
 
     let email = match Message::builder()
         .from(from_email)
-        // .reply_to(sender_email) // TODO: reply to handling
+        .reply_to(reply_to_email)
         .to(to_email)
         .subject(mail.subject)
         .multipart(

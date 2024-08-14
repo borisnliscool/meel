@@ -23,6 +23,7 @@ pub struct Mail {
     pub priority: i32,
     pub sent_at: Option<SystemTime>,
     pub scheduled_at: SystemTime,
+    pub reply_to: Option<String>
 }
 
 #[derive(Insertable)]
@@ -36,6 +37,7 @@ pub struct NewMail<'a> {
     pub send_attempts: i32,
     pub priority: i32,
     pub scheduled_at: SystemTime,
+    pub reply_to: Option<&'a str>,
 }
 
 #[derive(Queryable, Selectable)]

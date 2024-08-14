@@ -21,6 +21,7 @@ pub struct SendMailRequest {
     data: HashMap<String, String>,
     allow_html: Option<bool>,
     schedule_at: Option<String>,
+    reply_to: Option<String>,
     // TODO: attachments
 }
 
@@ -84,6 +85,7 @@ async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMai
         send_attempts: 0,
         priority: mail.priority,
         scheduled_at,
+        reply_to: mail.reply_to.as_deref(),
     };
 
     let mut conn = match pool.get() {

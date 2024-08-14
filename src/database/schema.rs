@@ -47,6 +47,7 @@ diesel::table! {
         priority -> Int4,
         sent_at -> Nullable<Timestamp>,
         scheduled_at -> Timestamp,
+        reply_to -> Nullable<Text>,
     }
 }
 

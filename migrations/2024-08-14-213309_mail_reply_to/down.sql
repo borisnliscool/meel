@@ -1,0 +1,1 @@
+ALTER TABLE mails DROP COLUMN reply_to;

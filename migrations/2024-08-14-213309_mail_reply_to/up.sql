@@ -1,0 +1,1 @@
+ALTER TABLE mails ADD COLUMN reply_to TEXT;
