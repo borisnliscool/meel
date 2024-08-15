@@ -19,10 +19,12 @@ async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode>
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
 
+    let max_send_attempts: i32 = env::var("MEEL_MAX_SEND_ATTEMPTS").unwrap_or("10".to_string()).parse().unwrap_or(10);
+
     let mut scheduled_mails = match mails
         .filter(scheduled_at.lt(SystemTime::now()))
         .filter(sent_at.is_null())
-        // TODO: filter where send_attempts < MAX_SEND_ATTEMPTS
+        .filter(send_attempts.lt(max_send_attempts))
         .load::<Mail>(&mut conn) {
         Ok(scheduled_mails) => scheduled_mails,
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
