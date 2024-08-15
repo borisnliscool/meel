@@ -31,5 +31,5 @@ diesel migration run
     - [ ] Rate limiting
     - [ ] Mail server settings
     - [ ] Logging
-    - [ ] Maximum number of send attempts
+    - [x] Maximum number of send attempts
     - [ ] Template storage path

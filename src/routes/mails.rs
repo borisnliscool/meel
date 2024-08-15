@@ -22,7 +22,8 @@ pub struct SendMailRequest {
     allow_html: Option<bool>,
     schedule_at: Option<String>,
     reply_to: Option<String>,
-    // TODO: attachments
+    subject: Option<String>,
+    // TODO: Handle attachments
 }
 
 #[derive(Serialize)]
@@ -35,7 +36,7 @@ pub struct SendMailResponse {
     scheduled_at: String,
     sent_at: Option<String>,
     sent: bool,
-    // TODO: attachment information
+    // TODO: Attachment information
 }
 
 impl SendMailResponse {
@@ -79,13 +80,14 @@ async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMai
     let new_mail = NewMail {
         sender: &mail.sender,
         recipient: &mail.recipient,
-        subject: "", // TODO: parse from template
+        // TODO: If the subject is not passed, we should parse it from the template's metadata.
+        subject: &mail.subject.unwrap_or("".to_string()),
         html_body: &html_body_string,
         text_body: &plain_text_string,
         send_attempts: 0,
         priority: mail.priority,
-        scheduled_at,
         reply_to: mail.reply_to.as_deref(),
+        scheduled_at,
     };
 
     let mut conn = match pool.get() {

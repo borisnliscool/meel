@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -6,7 +7,16 @@ use std::path::Path;
 use ammonia::clean_text;
 use regex::Regex;
 
-const ROOT_TEMPLATE_DIRECTORY: &str = "./data/templates";
+fn get_template_directory() -> String {
+    let default_template_directory = "./data/templates";
+    let env_var = env::var("MEEL_TEMPLATE_DIRECTORY").unwrap_or(default_template_directory.to_string());
+
+    if env_var.is_empty() { 
+        default_template_directory.to_string()
+    } else {
+        env_var
+    }
+}
 
 /// Get a template file based on the name. The name may contain a directory path.
 fn get_template_file(template_name: String) -> Result<File, String> {
@@ -18,7 +28,7 @@ fn get_template_file(template_name: String) -> Result<File, String> {
         return Err("Template name cannot contain '..'".to_string());
     }
 
-    let template_path = format!("{}/{}.meel", ROOT_TEMPLATE_DIRECTORY, template_name);
+    let template_path = format!("{}/{}.meel", get_template_directory(), template_name);
 
     match File::open(template_path) {
         Ok(file) => Ok(file),
@@ -28,7 +38,7 @@ fn get_template_file(template_name: String) -> Result<File, String> {
 
 /// Get a plain text template file based on the name. The name may contain a directory path.
 fn get_plain_text_file(template_name: String) -> Result<File, String> {
-    let template_path = format!("{}/{}.txt", ROOT_TEMPLATE_DIRECTORY, template_name);
+    let template_path = format!("{}/{}.txt", get_template_directory(), template_name);
 
     match File::open(template_path) {
         Ok(file) => Ok(file),
@@ -38,7 +48,8 @@ fn get_plain_text_file(template_name: String) -> Result<File, String> {
 
 /// Recursively apply the layout to the template until the root layout is reached.
 fn apply_layout(path: String, contents: String) -> Result<String, String> {
-    let root_template_path = Path::new(ROOT_TEMPLATE_DIRECTORY);
+    let template_directory = get_template_directory();
+    let root_template_path = Path::new(&template_directory);
 
     let template_parent_path = match Path::new(&path).parent() {
         Some(parent) => parent,
@@ -67,7 +78,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
         Err(_) => return Err("Failed to compile regex".to_string())
     };
 
-    // TODO: The indenting isn't correct for nested slots.
+    // TODO: The indenting isn't correct for nested slots. We might actually want to compress the content though.
     let result = re.replace_all(&layout_contents, &contents).to_string();
 
     if root_template_path.eq(template_parent_path) {
@@ -110,7 +121,7 @@ pub fn get_template_placeholders(template_name: String) -> Result<Vec<String>, S
         Err(_) => return Err("Failed to read template file".to_string())
     };
 
-    let contents = apply_layout(format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, &template_name), contents)?;
+    let contents = apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?;
 
     let re = create_placeholder_regex()?;
     Ok(re.find_iter(&contents).map(|m| m.as_str()[2..m.len() - 2].trim().to_string()).collect())
@@ -127,7 +138,7 @@ pub fn render(template_name: String, data: HashMap<String, String>, allow_html: 
     };
 
     apply_placeholders(
-        apply_layout(format!("{}/{}", ROOT_TEMPLATE_DIRECTORY, &template_name), contents)?,
+        apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?,
         data,
         allow_html,
     )
