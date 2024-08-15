@@ -31,7 +31,9 @@ async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode>
     };
 
     scheduled_mails.sort_by(|a, b| {
-        b.priority.cmp(&a.priority).then_with(|| a.scheduled_at.cmp(&b.scheduled_at))
+        b.priority.cmp(&a.priority)
+            .then_with(|| a.scheduled_at.cmp(&b.scheduled_at))
+            .then_with(|| a.send_attempts.cmp(&b.send_attempts))
     });
 
     Ok(scheduled_mails)
