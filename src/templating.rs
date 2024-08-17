@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -7,15 +6,10 @@ use std::path::Path;
 use ammonia::clean_text;
 use regex::Regex;
 
-fn get_template_directory() -> String {
-    let default_template_directory = "./data/templates";
-    let env_var = env::var("MEEL_TEMPLATE_DIRECTORY").unwrap_or(default_template_directory.to_string());
+use crate::utils;
 
-    if env_var.is_empty() { 
-        default_template_directory.to_string()
-    } else {
-        env_var
-    }
+fn get_template_directory() -> String {
+    utils::env::get_var("MEEL_TEMPLATE_DIRECTORY", Some("./data/templates")).unwrap()
 }
 
 /// Get a template file based on the name. The name may contain a directory path.

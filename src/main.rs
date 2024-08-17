@@ -1,4 +1,3 @@
-use std::env;
 use std::sync::Arc;
 
 use dotenvy::dotenv;
@@ -14,7 +13,7 @@ mod utils;
 mod mail_scheduler;
 
 async fn start_web_server(shared_pool: Arc<ConnectionPool>) {
-    let address = env::var("MEEL_HOST").unwrap_or("meel:3000".to_string());
+    let address = utils::env::get_var("MEEL_HOST", Some("0.0.0.0:8080")).unwrap();
     let listener = TcpListener::bind(address.clone()).await.expect("Failed to bind address");
 
     tracing::info!("Webserver listening on {}", address);
@@ -30,7 +29,7 @@ async fn start_mail_scheduler(shared_pool: Arc<ConnectionPool>) {
         tokio::spawn(mail_scheduler::send_mails(shared_pool.clone()));
 
         const DEFAULT_SLEEP_INTERVAL: u64 = 15;
-        let sleep_interval = env::var("MEEL_SCHEDULER_INTERVAL").unwrap_or(DEFAULT_SLEEP_INTERVAL.to_string()).parse::<u64>().unwrap_or(DEFAULT_SLEEP_INTERVAL);
+        let sleep_interval = utils::env::get_var("MEEL_SCHEDULER_INTERVAL", Some(&DEFAULT_SLEEP_INTERVAL.to_string())).unwrap().parse::<u64>().unwrap_or(DEFAULT_SLEEP_INTERVAL);
 
         tokio::time::sleep(tokio::time::Duration::from_secs(sleep_interval)).await;
     }

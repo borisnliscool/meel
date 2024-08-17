@@ -1,4 +1,3 @@
-use std::env;
 use std::sync::Arc;
 use std::time::SystemTime;
 
@@ -12,6 +11,7 @@ use crate::database::ConnectionPool;
 use crate::database::models::Mail;
 use crate::database::schema::mails::{id, scheduled_at, send_attempts, sent_at};
 use crate::database::schema::mails::dsl::mails;
+use crate::utils;
 
 async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode> {
     let mut conn = match pool.get() {
@@ -19,7 +19,9 @@ async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode>
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
 
-    let max_send_attempts: i32 = env::var("MEEL_MAX_SEND_ATTEMPTS").unwrap_or("10".to_string()).parse().unwrap_or(10);
+    const DEFAULT_MAX_SEND_ATTEMPTS: i32 = 10;
+    let max_send_attempts: i32 = utils::env::get_var("MEEL_MAX_SEND_ATTEMPTS", Some(&DEFAULT_MAX_SEND_ATTEMPTS.to_string()))
+        .ok_or(&DEFAULT_MAX_SEND_ATTEMPTS.to_string()).unwrap().parse().unwrap_or(DEFAULT_MAX_SEND_ATTEMPTS);
 
     let mut scheduled_mails = match mails
         .filter(scheduled_at.lt(SystemTime::now()))
@@ -40,30 +42,32 @@ async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode>
 }
 
 fn get_smtp_transport() -> Result<SmtpTransport, String> {
-    let smtp_username = match env::var("MEEL_SMTP_USERNAME") {
-        Ok(username) => username,
-        Err(_) => return Err("MEEL_SMTP_USERNAME must be set".to_string())
+    let smtp_username = match utils::env::get_var("MEEL_SMTP_USERNAME", None) {
+        Some(username) => username,
+        None => return Err("MEEL_SMTP_USERNAME must be set".to_string())
     };
 
-    let smtp_password = match env::var("MEEL_SMTP_PASSWORD") {
-        Ok(password) => password,
-        Err(_) => return Err("MEEL_SMTP_PASSWORD must be set".to_string())
+    let smtp_password = match utils::env::get_var("MEEL_SMTP_PASSWORD", None) {
+        Some(password) => password,
+        None => return Err("MEEL_SMTP_PASSWORD must be set".to_string())
     };
 
     let creds = Credentials::new(smtp_username, smtp_password);
-    let smtp_relay = match env::var("MEEL_SMTP_RELAY") {
-        Ok(relay) => Some(relay.to_string()),
-        Err(_) => None
-    };
+    let smtp_relay = utils::env::get_var("MEEL_SMTP_RELAY", None);
 
-    let mailer = if smtp_relay.is_some() && !&smtp_relay.clone().unwrap().is_empty() {
+    let mailer = if smtp_relay.is_some() {
         match SmtpTransport::relay(&smtp_relay.unwrap()) {
             Ok(mailer) => mailer.credentials(creds).build(),
             Err(_) => return Err("Failed to build mailer".to_string())
         }
     } else {
-        // TODO: If no smtp server is set we default to localhost:1025. This should be something configurable
-        SmtpTransport::builder_dangerous("localhost").port(1025).build()
+        let transport_domain = utils::env::get_var("MEEL_TRANSPORT_DOMAIN", Some("mailhog"));
+        let transport_port = utils::env::get_var("MEEL_TRANSPORT_PORT", Some("1025"));
+
+        // We can use unwrap safely here, as we have a fallback set above.
+        SmtpTransport::builder_dangerous(transport_domain.unwrap())
+            .port(transport_port.unwrap().parse().unwrap_or(1025))
+            .build()
     };
 
     Ok(mailer)
