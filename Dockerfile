@@ -10,7 +10,7 @@ COPY migrations/ migrations/
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 
+RUN cargo install diesel_cli --no-default-features --features postgres
 RUN cargo build --release
 
-EXPOSE 3000
-CMD ["./target/release/meel"]
+CMD ["/bin/sh", "-c", "diesel migration run && target/release/meel"]

@@ -1,20 +1,25 @@
+volumes:
+  meel_data:
+
 services:
   db:
     image: postgres
-    restart: always
+    restart: unless-stopped
     shm_size: 128mb
     env_file:
-      - .env
+      - .env.production
+    volumes:
+      - meel_data:/var/lib/postgresql/data
 
   meel:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
+    restart: unless-stopped
     ports:
       - 8080:8080
     env_file:
-      - .env
+      - .env.production
     depends_on:
       - db
     volumes:
