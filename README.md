@@ -1,5 +1,11 @@
 # Meel
 
+#### Creating new release
+
+```
+git tag -a <version> -m "v<version>" && git push --tags
+```
+
 #### Run Diesel migrations
 
 ```bash
