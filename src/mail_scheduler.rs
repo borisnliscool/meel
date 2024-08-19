@@ -2,7 +2,8 @@ use std::sync::Arc;
 use std::time::SystemTime;
 
 use axum::http::StatusCode;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use chrono::{Duration, NaiveDateTime, Utc};
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, RunQueryDsl};
 use lettre::{Message, SmtpTransport, Transport};
 use lettre::message::{header, Mailbox, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
@@ -71,6 +72,27 @@ fn get_smtp_transport() -> Result<SmtpTransport, String> {
     };
 
     Ok(mailer)
+}
+
+async fn delete_expired_sent_emails(pool: Arc<ConnectionPool>) {
+    let mut conn = match pool.get() {
+        Ok(conn) => conn,
+        Err(_) => return,
+    };
+
+    let expiry_days = utils::env::get_var("MEEL_DELETE_SENT_EMAILS_EXPIRY_DAYS", Some("30")).unwrap().parse::<i64>().unwrap_or(30);
+
+    // TODO: This is deprecated but I can't figure out the alternative
+    #[allow(deprecated)]
+    let expiry_date = NaiveDateTime::from_timestamp(Utc::now().timestamp() - Duration::days(expiry_days).num_seconds(), 0);
+
+    match diesel::delete(mails.filter(sent_at.is_not_null().and(sent_at.lt(expiry_date))))
+        .execute(&mut conn) {
+        Ok(affected_rows) => if affected_rows > 0 {
+            tracing::info!("Deleted {} expired sent emails", affected_rows);
+        },
+        Err(_) => tracing::error!("Failed to delete sent emails")
+    }
 }
 
 async fn send_mail(mail: Mail) -> Result<(), String> {
@@ -153,4 +175,6 @@ pub async fn send_mails(pool: Arc<ConnectionPool>) {
             }
         }
     }
+
+    delete_expired_sent_emails(pool).await;
 }
