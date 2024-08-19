@@ -38,4 +38,4 @@ diesel migration run
     - [ ] Mail server settings
     - [ ] Logging
     - [x] Maximum number of send attempts
-    - [ ] Template storage path
+    - [x] Template storage path
