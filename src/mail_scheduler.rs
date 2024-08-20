@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::SystemTime;
 
 use axum::http::StatusCode;
-use chrono::{Duration, NaiveDateTime, Utc};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, RunQueryDsl};
 use lettre::{Message, SmtpTransport, Transport};
 use lettre::message::{header, Mailbox, MultiPart, SinglePart};
@@ -74,17 +74,16 @@ fn get_smtp_transport() -> Result<SmtpTransport, String> {
     Ok(mailer)
 }
 
-async fn delete_expired_sent_emails(pool: Arc<ConnectionPool>) {
+async fn remove_old_sent_emails(pool: Arc<ConnectionPool>) {
     let mut conn = match pool.get() {
         Ok(conn) => conn,
         Err(_) => return,
     };
 
-    let expiry_days = utils::env::get_var("MEEL_DELETE_SENT_EMAILS_EXPIRY_DAYS", Some("30")).unwrap().parse::<i64>().unwrap_or(30);
+    let retention_days = utils::env::get_var("MEEL_SENT_EMAIL_RETENTION_DAYS", Some("30")).unwrap().parse::<i64>().unwrap_or(30);
 
-    // TODO: This is deprecated but I can't figure out the alternative
     #[allow(deprecated)]
-    let expiry_date = NaiveDateTime::from_timestamp(Utc::now().timestamp() - Duration::days(expiry_days).num_seconds(), 0);
+    let expiry_date = NaiveDateTime::from_timestamp(Utc::now().timestamp() - Duration::days(retention_days).num_seconds(), 0);
 
     match diesel::delete(mails.filter(sent_at.is_not_null().and(sent_at.lt(expiry_date))))
         .execute(&mut conn) {
@@ -176,5 +175,5 @@ pub async fn send_mails(pool: Arc<ConnectionPool>) {
         }
     }
 
-    delete_expired_sent_emails(pool).await;
+    remove_old_sent_emails(pool).await;
 }
