@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{database, templating, utils};
 use crate::database::models::{Mail, NewMail};
+use crate::utils::api_error::{ApiError, ApiErrorCode};
 
 #[derive(Deserialize)]
 pub struct SendMailRequest {
@@ -54,24 +55,45 @@ impl SendMailResponse {
     }
 }
 
-async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMailRequest) -> Result<Mail, StatusCode> {
+async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMailRequest) -> Result<Mail, ApiError> {
     use crate::database::schema::mails;
 
     let html_body_string = match templating::render(mail.template.clone(), mail.data.clone(), mail.allow_html.unwrap_or(false)) {
         Ok(html_body_string) => html_body_string,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ApiErrorCode::Unknown,
+                "Could not render template: ".to_string() + &err.to_string(),
+                HashMap::new(),
+            )
+        ),
     };
     let plain_text_string = templating::render_plain_text(mail.template, mail.data).unwrap_or_else(|_| "".to_string());
 
     let scheduled_at = if mail.schedule_at.is_some() {
         let iso_string = match mail.schedule_at.as_ref() {
             Some(iso_string) => iso_string,
-            None => return Err(StatusCode::BAD_REQUEST),
+            None => return Err(
+                ApiError::new(
+                    StatusCode::BAD_REQUEST,
+                    ApiErrorCode::Unknown,
+                    "Missing `schedule_at`".to_string(),
+                    HashMap::new(),
+                )
+            ),
         };
 
         match utils::time::iso_string_to_system_time(iso_string) {
             Ok(scheduled_at) => scheduled_at,
-            Err(_) => return Err(StatusCode::BAD_REQUEST),
+            Err(err) => return Err(
+                ApiError::new(
+                    StatusCode::BAD_REQUEST,
+                    ApiErrorCode::Unknown,
+                    "Failed to parse `schedule_at`: ".to_string() + &err.to_string(),
+                    HashMap::new(),
+                )
+            ),
         }
     } else {
         SystemTime::now()
@@ -92,7 +114,14 @@ async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMai
 
     let mut conn = match pool.get() {
         Ok(conn) => conn,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ApiErrorCode::Unknown,
+                "Could not connect to database: ".to_string() + &err.to_string(),
+                HashMap::new(),
+            )
+        ),
     };
 
     match diesel::insert_into(mails::table)
@@ -102,20 +131,18 @@ async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMai
         Ok(created_mail) => Ok(created_mail),
         Err(err) => {
             tracing::error!("{}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
+            Err(
+                ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to save mail: ".to_string() + &err.to_string(), HashMap::new())
+            )
         }
     }
 }
 
-pub async fn send_mails(pool: Extension<Arc<database::ConnectionPool>>, Json(payload): Json<Vec<SendMailRequest>>) -> Result<Json<Vec<SendMailResponse>>, StatusCode> {
+pub async fn send_mails(pool: Extension<Arc<database::ConnectionPool>>, Json(payload): Json<Vec<SendMailRequest>>) -> Result<Json<Vec<SendMailResponse>>, ApiError> {
     let mut mails: Vec<Mail> = vec![];
 
     for mail_payload in payload {
-        let created_mail = match send_mail(pool.clone(), mail_payload).await {
-            Ok(created_mail) => created_mail,
-            Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
-        };
-
+        let created_mail = send_mail(pool.clone(), mail_payload).await?;
         mails.push(created_mail);
     }
 
@@ -127,37 +154,45 @@ pub async fn send_mails(pool: Extension<Arc<database::ConnectionPool>>, Json(pay
     ))
 }
 
-pub async fn get_mail_status(pool: Extension<Arc<database::ConnectionPool>>, Path(mail_id): Path<i32>) -> Result<Json<SendMailResponse>, StatusCode> {
+pub async fn get_mail_status(pool: Extension<Arc<database::ConnectionPool>>, Path(mail_id): Path<i32>) -> Result<Json<SendMailResponse>, ApiError> {
     use crate::database::schema::mails;
 
     let mut conn = match pool.get() {
         Ok(conn) => conn,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Could not connect to database: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     let mail = match mails::table
         .find(mail_id)
         .first::<Mail>(&mut conn) {
         Ok(mail) => mail,
-        Err(_) => return Err(StatusCode::NOT_FOUND),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::NOT_FOUND, ApiErrorCode::NotFound, "Mail not found: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     Ok(Json(SendMailResponse::new(mail)))
 }
 
-pub async fn get_mail_body(pool: Extension<Arc<database::ConnectionPool>>, Path(mail_id): Path<i32>) -> Result<Html<String>, StatusCode> {
+pub async fn get_mail_body(pool: Extension<Arc<database::ConnectionPool>>, Path(mail_id): Path<i32>) -> Result<Html<String>, ApiError> {
     use crate::database::schema::mails;
 
     let mut conn = match pool.get() {
         Ok(conn) => conn,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Could not connect to database: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     let mail = match mails::table
         .find(mail_id)
         .first::<Mail>(&mut conn) {
         Ok(mail) => mail,
-        Err(_) => return Err(StatusCode::NOT_FOUND),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::NOT_FOUND, ApiErrorCode::NotFound, "Mail not found: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     Ok(Html(mail.html_body))

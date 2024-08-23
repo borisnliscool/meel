@@ -39,3 +39,20 @@ diesel migration run
     - [ ] Logging
     - [x] Maximum number of send attempts
     - [x] Template storage path
+
+#### Error schema
+
+```json
+{
+	"errors": [
+		{
+			"code": "<code>",
+			"message": "<message>",
+			"details": {
+				"<key>": "<value>"
+			}
+		}
+	]
+}
+
+```

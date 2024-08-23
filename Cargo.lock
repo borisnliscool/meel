@@ -758,6 +758,7 @@ dependencies = [
  "r2d2",
  "regex",
  "serde",
+ "serde_json",
  "tokio",
  "tower-http",
  "tracing",

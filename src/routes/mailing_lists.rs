@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::{Extension, Json};
@@ -8,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::database;
 use crate::database::models::{MailingList, MailingListSubscriber, NewMailingList, NewMailingListSubscriber};
+use crate::utils::api_error::{ApiError, ApiErrorCode};
 
 #[derive(Serialize)]
 pub struct MailingListResponse {
@@ -48,12 +50,14 @@ pub struct CreateMailingListRequest {
     description: String,
 }
 
-pub async fn create_mailing_list(pool: Extension<Arc<database::ConnectionPool>>, Json(data): Json<CreateMailingListRequest>) -> Result<Json<MailingListResponse>, StatusCode> {
+pub async fn create_mailing_list(pool: Extension<Arc<database::ConnectionPool>>, Json(data): Json<CreateMailingListRequest>) -> Result<Json<MailingListResponse>, ApiError> {
     use crate::database::schema::mailing_lists;
 
     let mut conn = match pool.get() {
         Ok(conn) => conn,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Could not connect to database: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     let new_mailing_list = NewMailingList {
@@ -66,25 +70,27 @@ pub async fn create_mailing_list(pool: Extension<Arc<database::ConnectionPool>>,
         .returning(MailingList::as_returning())
         .get_result(&mut conn) {
         Ok(created_mailing_list) => created_mailing_list,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to create mailing list: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     Ok(Json(MailingListResponse::new(created_mailing_list)))
 }
 
-pub async fn delete_mailing_list(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>) -> Result<StatusCode, StatusCode> {
+pub async fn delete_mailing_list(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>) -> Result<StatusCode, ApiError> {
     use crate::database::schema::mailing_lists;
 
     let mut conn = match pool.get() {
         Ok(conn) => conn,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Could not connect to database: ".to_string() + &err.to_string(), HashMap::new())),
     };
 
     match diesel::delete(mailing_lists::table.find(mailing_list_id)).execute(&mut conn) {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
         Err(err) => {
             tracing::error!("{}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
+            Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to delete mailing list".to_string(), HashMap::new()))
         }
     }
 }
@@ -114,12 +120,14 @@ impl SubscribeUserResponse {
     }
 }
 
-pub async fn subscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>, Json(data): Json<SubscribeUserRequest>) -> Result<Json<SubscribeUserResponse>, StatusCode> {
+pub async fn subscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>, Json(data): Json<SubscribeUserRequest>) -> Result<Json<SubscribeUserResponse>, ApiError> {
     use crate::database::schema::mailing_list_subscribers;
 
     let mut conn = match pool.get() {
         Ok(conn) => conn,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to connect to database: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     let new_subscriber = NewMailingListSubscriber {
@@ -133,7 +141,9 @@ pub async fn subscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Path
         .returning(MailingListSubscriber::as_returning())
         .get_result(&mut conn) {
         Ok(created_subscriber) => created_subscriber,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to create subscriber: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     Ok(Json(SubscribeUserResponse::new(created_subscriber)))
@@ -145,12 +155,14 @@ pub struct UnsubscribeUserRequest {
     email: String,
 }
 
-pub async fn unsubscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>, Json(data): Json<UnsubscribeUserRequest>) -> Result<StatusCode, StatusCode> {
+pub async fn unsubscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>, Json(data): Json<UnsubscribeUserRequest>) -> Result<StatusCode, ApiError> {
     use crate::database::schema::mailing_list_subscribers;
 
     let mut conn = match pool.get() {
         Ok(conn) => conn,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to connect to database: ".to_string() + &err.to_string(), HashMap::new())
+        ),
     };
 
     match diesel::delete(mailing_list_subscribers::table
@@ -160,7 +172,7 @@ pub async fn unsubscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Pa
         Ok(_) => Ok(StatusCode::NO_CONTENT),
         Err(err) => {
             tracing::error!("{}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
+            Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to delete subscriber: ".to_string() + &err.to_string(), HashMap::new()))
         }
     }
 }
