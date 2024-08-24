@@ -4,6 +4,7 @@ use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::Json;
 use axum::response::Html;
+use glob::{Paths, PatternError};
 use serde::{Deserialize, Serialize};
 
 use crate::templating;
@@ -15,14 +16,31 @@ pub struct Template {
 }
 
 pub async fn get_templates() -> Result<Json<Vec<Template>>, ApiError> {
-    // TODO: Implement fetching templates
-    Ok(Json(vec![]))
+    let entries = match glob::glob(&format!("{}/**/*.meel", templating::get_template_directory())) {
+        Ok(entries) => entries,
+        Err(_) => return Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to glob templates".to_string(), HashMap::new())),
+    };
+
+    let mut templates = Vec::new();
+    for entry in entries {
+        match entry {
+            Ok(path) => {
+                let name = path.file_stem().unwrap().to_str().unwrap().to_string();
+                templates.push(Template { name });
+            }
+            Err(_) => {
+                return Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to glob templates".to_string(), HashMap::new()));
+            }
+        }
+    }
+
+    Ok(Json(templates))
 }
 
 #[derive(Deserialize)]
 pub struct RenderTemplateRequest {
     data: HashMap<String, String>,
-    allow_html: Option<bool>
+    allow_html: Option<bool>,
 }
 
 pub async fn render_template(Path(template_name): Path<String>, Json(data): Json<RenderTemplateRequest>) -> Result<Html<String>, ApiError> {
@@ -37,8 +55,8 @@ pub async fn render_template(Path(template_name): Path<String>, Json(data): Json
                     "Could not render template: ".to_string() + &err.to_string(),
                     HashMap::new(),
                 )
-            ) 
-        },
+            )
+        }
     }
 }
 
@@ -54,8 +72,8 @@ pub async fn render_template_plain_text(Path(template_name): Path<String>, Json(
                     "Could not render template: ".to_string() + &err.to_string(),
                     HashMap::new(),
                 )
-            ) 
-        },
+            )
+        }
     }
 }
 
@@ -71,7 +89,7 @@ pub async fn get_template_placeholders(Path(template_name): Path<String>) -> Res
                     "Could not render template: ".to_string() + &err.to_string(),
                     HashMap::new(),
                 )
-            ) 
-        },
+            )
+        }
     }
 }

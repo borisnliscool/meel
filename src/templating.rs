@@ -8,7 +8,7 @@ use regex::Regex;
 
 use crate::utils;
 
-fn get_template_directory() -> String {
+pub fn get_template_directory() -> String {
     format!("{}/templates", utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap())
 }
 
