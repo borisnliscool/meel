@@ -9,7 +9,29 @@ use regex::Regex;
 use crate::utils;
 
 fn get_template_directory() -> String {
-    utils::env::get_var("MEEL_TEMPLATE_DIRECTORY", Some("./data/templates")).unwrap()
+    format!("{}/templates", utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap())
+}
+
+fn get_globals() -> Result<HashMap<String, String>, String> {
+    let globals_path = format!("{}/globals.json", utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap());
+
+    let mut file = match File::open(globals_path) {
+        Ok(file) => file,
+        Err(_) => return Err("Failed to open globals file".to_string())
+    };
+
+    let mut contents = String::new();
+    match file.read_to_string(&mut contents) {
+        Ok(_) => (),
+        Err(_) => return Err("Failed to read globals file".to_string())
+    };
+
+    let globals: HashMap<String, String> = match serde_json::from_str(&contents) {
+        Ok(globals) => globals,
+        Err(_) => return Err("Failed to parse globals file".to_string())
+    };
+
+    Ok(globals)
 }
 
 /// Get a template file based on the name. The name may contain a directory path.
@@ -122,7 +144,7 @@ pub fn get_template_placeholders(template_name: String) -> Result<Vec<String>, S
 }
 
 /// Render a template with the given data.
-pub fn render(template_name: String, data: HashMap<String, String>, allow_html: bool) -> Result<String, String> {
+pub fn render(template_name: String, mut data: HashMap<String, String>, allow_html: bool) -> Result<String, String> {
     let mut file = get_template_file(template_name.clone())?;
 
     let mut contents = String::new();
@@ -131,6 +153,9 @@ pub fn render(template_name: String, data: HashMap<String, String>, allow_html: 
         Err(_) => return Err("Failed to read template file".to_string())
     };
 
+    let globals = get_globals().unwrap_or_default();
+    data.extend(globals);
+
     apply_placeholders(
         apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?,
         data,
@@ -138,7 +163,7 @@ pub fn render(template_name: String, data: HashMap<String, String>, allow_html: 
     )
 }
 
-pub fn render_plain_text(template_name: String, data: HashMap<String, String>) -> Result<String, String> {
+pub fn render_plain_text(template_name: String, mut data: HashMap<String, String>) -> Result<String, String> {
     let mut file = get_plain_text_file(template_name.clone())?;
 
     let mut contents = String::new();
@@ -146,6 +171,9 @@ pub fn render_plain_text(template_name: String, data: HashMap<String, String>) -
         Ok(_) => (),
         Err(_) => return Err("Failed to read template file".to_string())
     };
+
+    let globals = get_globals().unwrap_or_default();
+    data.extend(globals);
 
     apply_placeholders(contents, data, false)
 }
