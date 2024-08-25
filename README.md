@@ -44,15 +44,11 @@ diesel migration run
 
 ```json
 {
-	"errors": [
-		{
-			"code": "<code>",
-			"message": "<message>",
-			"details": {
-				"<key>": "<value>"
-			}
-		}
-	]
+	"code": "<code>",
+	"message": "<message>",
+	"details": {
+		"<key>": "<value>"
+	}
 }
 
 ```
