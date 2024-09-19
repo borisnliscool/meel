@@ -7,8 +7,9 @@ use axum::http::StatusCode;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 use serde::{Deserialize, Serialize};
 
-use crate::database;
+use crate::{database, routes};
 use crate::database::models::{MailingList, MailingListSubscriber, NewMailingList, NewMailingListSubscriber};
+use crate::routes::mails::SendMailRequest;
 use crate::utils::api_error::{ApiError, ApiErrorCode};
 
 #[derive(Serialize)]
@@ -177,3 +178,60 @@ pub async fn unsubscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Pa
     }
 }
 
+
+#[derive(Deserialize)]
+pub struct SendMailsRequest {
+    sender: String,
+    template: String,
+    priority: i32,
+    data: HashMap<String, String>,
+    allow_html: Option<bool>,
+    schedule_at: Option<String>,
+    reply_to: Option<String>,
+    subject: Option<String>,
+    // TODO: Handle attachments
+}
+
+pub async fn send_mailing_list_mails(pool: Extension<Arc<database::ConnectionPool>>, Path(mailing_list_id): Path<i32>, Json(data): Json<SendMailsRequest>) -> Result<StatusCode, ApiError> {
+    use crate::database::schema::mailing_list_subscribers;
+
+    let mut conn = match pool.get() {
+        Ok(conn) => conn,
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to connect to database: ".to_string() + &err.to_string(), HashMap::new())
+        ),
+    };
+
+    let subscribers = match mailing_list_subscribers::table
+        .filter(mailing_list_subscribers::mailing_list_id.eq(mailing_list_id))
+        .select(MailingListSubscriber::as_select())
+        .load(&mut conn) {
+        Ok(subscribers) => subscribers,
+        Err(err) => return Err(
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to load subscribers: ".to_string() + &err.to_string(), HashMap::new())
+        ),
+    };
+
+    for subscriber in subscribers {
+        let mut placeholder_data = data.data.clone();
+        placeholder_data.insert("subscriber_name".to_string(), subscriber.name);
+        placeholder_data.insert("subscriber_email".to_string(), subscriber.email.clone());
+
+        routes::mails::send_mail(
+            pool.clone(),
+            SendMailRequest {
+                recipient: subscriber.email,
+                sender: data.sender.clone(),
+                template: data.template.clone(),
+                priority: data.priority,
+                data: placeholder_data,
+                allow_html: data.allow_html,
+                schedule_at: data.schedule_at.clone(),
+                reply_to: data.reply_to.clone(),
+                subject: data.subject.clone(),
+            },
+        ).await?;
+    }
+
+    Ok(StatusCode::OK)
+}

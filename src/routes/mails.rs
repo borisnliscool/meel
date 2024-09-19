@@ -15,15 +15,15 @@ use crate::utils::api_error::{ApiError, ApiErrorCode};
 
 #[derive(Deserialize)]
 pub struct SendMailRequest {
-    recipient: String,
-    sender: String,
-    template: String,
-    priority: i32,
-    data: HashMap<String, String>,
-    allow_html: Option<bool>,
-    schedule_at: Option<String>,
-    reply_to: Option<String>,
-    subject: Option<String>,
+    pub recipient: String,
+    pub sender: String,
+    pub template: String,
+    pub priority: i32,
+    pub data: HashMap<String, String>,
+    pub allow_html: Option<bool>,
+    pub schedule_at: Option<String>,
+    pub reply_to: Option<String>,
+    pub subject: Option<String>,
     // TODO: Handle attachments
 }
 
@@ -55,7 +55,7 @@ impl SendMailResponse {
     }
 }
 
-async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMailRequest) -> Result<Mail, ApiError> {
+pub async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMailRequest) -> Result<Mail, ApiError> {
     use crate::database::schema::mails;
 
     let html_body_string = match templating::render(mail.template.clone(), mail.data.clone(), mail.allow_html.unwrap_or(false)) {

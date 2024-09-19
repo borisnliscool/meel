@@ -6,7 +6,7 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 use crate::database::ConnectionPool;
-use crate::routes::mailing_lists::{create_mailing_list, delete_mailing_list, get_mailing_lists, subscribe_user, unsubscribe_user};
+use crate::routes::mailing_lists::{create_mailing_list, delete_mailing_list, get_mailing_lists, send_mailing_list_mails, subscribe_user, unsubscribe_user};
 use crate::routes::mails::{get_mail_body, get_mail_status, send_mails};
 use crate::routes::templates::{get_template_placeholders, get_templates, render_template, render_template_plain_text};
 
@@ -28,6 +28,7 @@ pub async fn create(shared_pool: Arc<ConnectionPool>) -> Router {
         .route("/mailing-lists/:mailing_list_id", delete(delete_mailing_list))
         .route("/mailing-lists/:mailing_list_id/subscribe", post(subscribe_user))
         .route("/mailing-lists/:mailing_list_id/unsubscribe", post(unsubscribe_user))
+        .route("/mailing-lists/:mailing_list_id/send", post(send_mailing_list_mails))
 
         .layer(cors_layer)
         .layer(TraceLayer::new_for_http())
