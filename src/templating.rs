@@ -113,7 +113,7 @@ fn create_placeholder_regex() -> Result<Regex, String> {
 }
 
 /// Apply placeholders to the supplied template contents.
-fn apply_placeholders(mut contents: String, data: HashMap<String, String>, allow_html: bool) -> Result<String, String> {
+pub fn apply_placeholders(mut contents: String, data: HashMap<String, String>, allow_html: bool) -> Result<String, String> {
     let re = create_placeholder_regex()?;
     let placeholders: Vec<String> = re.find_iter(&contents).map(|m| m.as_str().to_string()).collect();
 

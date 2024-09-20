@@ -63,7 +63,7 @@ pub async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: Sen
         mail.template.clone(),
         mail.data.clone(),
         mail.allow_html.unwrap_or(false),
-        mail.minify_html.unwrap_or(true)
+        mail.minify_html.unwrap_or(true),
     ) {
         Ok(html_body_string) => html_body_string,
         Err(err) => return Err(
@@ -75,7 +75,7 @@ pub async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: Sen
             )
         ),
     };
-    let plain_text_string = templating::render_plain_text(mail.template, mail.data).unwrap_or_else(|_| "".to_string());
+    let plain_text_string = templating::render_plain_text(mail.template, mail.data.clone()).unwrap_or_else(|_| "".to_string());
 
     let scheduled_at = if mail.schedule_at.is_some() {
         let iso_string = match mail.schedule_at.as_ref() {
@@ -105,11 +105,20 @@ pub async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: Sen
         SystemTime::now()
     };
 
+    // TODO: Parse the subject from the template if it is not passed by the user.
+
+    let subject = templating::apply_placeholders(
+        mail.subject.unwrap_or("".to_string()),
+        mail.data.clone(),
+        // Setting allow_html to true here is a bit of a hack, as if we don't it will replace spaces
+        // and special characters with html equivalents, which we don't want.
+        true,
+    ).unwrap_or("".to_string());
+
     let new_mail = NewMail {
         sender: &mail.sender,
         recipient: &mail.recipient,
-        // TODO: If the subject is not passed, we should parse it from the template's metadata.
-        subject: &mail.subject.unwrap_or("".to_string()),
+        subject: &subject,
         html_body: &html_body_string,
         text_body: &plain_text_string,
         send_attempts: 0,
