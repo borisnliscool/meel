@@ -21,7 +21,7 @@ diesel migration run
     - [ ] simple if and for logic
 - API Routes
     - [x] Sending mail
-        - [ ] Send to mailing list
+        - [x] Send to mailing list
         - [ ] File attachments
     - [x] Scheduling mail
     - [x] Fetching mail status

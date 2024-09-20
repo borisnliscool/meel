@@ -4,6 +4,7 @@ use std::io::Read;
 use std::path::Path;
 
 use ammonia::clean_text;
+use minify_html::{Cfg, minify};
 use regex::Regex;
 
 use crate::utils;
@@ -144,7 +145,7 @@ pub fn get_template_placeholders(template_name: String) -> Result<Vec<String>, S
 }
 
 /// Render a template with the given data.
-pub fn render(template_name: String, mut data: HashMap<String, String>, allow_html: bool) -> Result<String, String> {
+pub fn render(template_name: String, mut data: HashMap<String, String>, allow_html: bool, minify_html: bool) -> Result<String, String> {
     let mut file = get_template_file(template_name.clone())?;
 
     let mut contents = String::new();
@@ -156,11 +157,24 @@ pub fn render(template_name: String, mut data: HashMap<String, String>, allow_ht
     let globals = get_globals().unwrap_or_default();
     data.extend(globals);
 
-    apply_placeholders(
+    let content = apply_placeholders(
         apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?,
         data,
         allow_html,
-    )
+    )?;
+
+    if !minify_html {
+        return Ok(content);
+    }
+
+    let mut cfg = Cfg::new();
+    cfg.keep_closing_tags = true;
+
+    match String::from_utf8(minify(content.as_ref(), &cfg)) {
+        Ok(content) => Ok(content),
+        // We failed to minify here so return the original content
+        Err(_) => Ok(content)
+    }
 }
 
 pub fn render_plain_text(template_name: String, mut data: HashMap<String, String>) -> Result<String, String> {

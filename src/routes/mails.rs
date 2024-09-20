@@ -21,6 +21,7 @@ pub struct SendMailRequest {
     pub priority: i32,
     pub data: HashMap<String, String>,
     pub allow_html: Option<bool>,
+    pub minify_html: Option<bool>,
     pub schedule_at: Option<String>,
     pub reply_to: Option<String>,
     pub subject: Option<String>,
@@ -58,7 +59,12 @@ impl SendMailResponse {
 pub async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: SendMailRequest) -> Result<Mail, ApiError> {
     use crate::database::schema::mails;
 
-    let html_body_string = match templating::render(mail.template.clone(), mail.data.clone(), mail.allow_html.unwrap_or(false)) {
+    let html_body_string = match templating::render(
+        mail.template.clone(),
+        mail.data.clone(),
+        mail.allow_html.unwrap_or(false),
+        mail.minify_html.unwrap_or(true)
+    ) {
         Ok(html_body_string) => html_body_string,
         Err(err) => return Err(
             ApiError::new(

@@ -40,10 +40,16 @@ pub async fn get_templates() -> Result<Json<Vec<Template>>, ApiError> {
 pub struct RenderTemplateRequest {
     data: HashMap<String, String>,
     allow_html: Option<bool>,
+    minify_html: Option<bool>
 }
 
 pub async fn render_template(Path(template_name): Path<String>, Json(data): Json<RenderTemplateRequest>) -> Result<Html<String>, ApiError> {
-    match templating::render(template_name, data.data, data.allow_html.unwrap_or(false)) {
+    match templating::render(
+        template_name,
+        data.data,
+        data.allow_html.unwrap_or(false),
+        data.minify_html.unwrap_or(true)
+    ) {
         Ok(html) => Ok(Html(html)),
         Err(err) => {
             tracing::error!("{}", err);
