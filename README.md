@@ -25,7 +25,7 @@ diesel migration run
         - [ ] File attachments
     - [x] Scheduling mail
     - [x] Fetching mail status
-    - [ ] Fetch templates list
+    - [x] Fetch templates list
     - [ ] Mailing lists
         - [x] Fetch lists
         - [x] Create mailing list
