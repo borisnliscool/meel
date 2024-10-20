@@ -11,6 +11,7 @@ mod database;
 mod routes;
 mod utils;
 mod mail_scheduler;
+mod components;
 
 async fn start_web_server(shared_pool: Arc<ConnectionPool>) {
     let address = utils::env::get_var("MEEL_HOST", Some("0.0.0.0:8080")).unwrap();

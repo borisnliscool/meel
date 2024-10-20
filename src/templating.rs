@@ -7,7 +7,7 @@ use ammonia::clean_text;
 use minify_html::{Cfg, minify};
 use regex::Regex;
 
-use crate::utils;
+use crate::{components, utils};
 
 pub fn get_template_directory() -> String {
     format!("{}/templates", utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap())
@@ -95,7 +95,6 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
         Err(_) => return Err("Failed to compile regex".to_string())
     };
 
-    // TODO: The indenting isn't correct for nested slots. We might actually want to compress the content though.
     let result = re.replace_all(&layout_contents, &contents).to_string();
 
     if root_template_path.eq(template_parent_path) {
@@ -157,11 +156,9 @@ pub fn render(template_name: String, mut data: HashMap<String, String>, allow_ht
     let globals = get_globals().unwrap_or_default();
     data.extend(globals);
 
-    let content = apply_placeholders(
-        apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?,
-        data,
-        allow_html,
-    )?;
+    let content = apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?;
+    let content = apply_placeholders(content, data.clone(),allow_html)?;
+    let content = components::apply_components(content, data)?;
 
     if !minify_html {
         return Ok(content);
