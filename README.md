@@ -2,7 +2,10 @@
 
 ### About the project
 
-Meel is an open-source API for email scheduling and mailing list management, built with Rust. It features a complex templating system with layout files that can be edited to update all emails at once, streamlining the process of managing email designs. This system ensures consistency across email campaigns while reducing the time and effort required to make widespread changes.
+Meel is an open-source API for email scheduling and mailing list management, built with Rust. It features a complex
+templating system with layout files that can be edited to update all emails at once, streamlining the process of
+managing email designs. This system ensures consistency across email campaigns while reducing the time and effort
+required to make widespread changes.
 
 <br/>
 
@@ -43,7 +46,7 @@ diesel migration run
         - [x] Remove from mailing list
 - Configuration
     - [ ] Rate limiting
-    - [ ] Mail server settings
+    - [x] Mail server settings
     - [ ] Logging
     - [x] Maximum number of send attempts
     - [x] Template storage path
