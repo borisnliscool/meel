@@ -13,7 +13,7 @@ services:
 
   meel:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:

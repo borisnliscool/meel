@@ -5,10 +5,10 @@ RUN apt-get install libpq-dev libssl-dev pkg-config -y
 
 WORKDIR /usr/src/meel
 
-COPY src/ src/
-COPY migrations/ migrations/
-COPY Cargo.toml Cargo.toml
-COPY Cargo.lock Cargo.lock
+COPY backend/src src/
+COPY backend/migrations migrations/
+COPY backend/Cargo.toml Cargo.toml
+COPY backend/Cargo.lock Cargo.lock
 
 RUN cargo install diesel_cli --no-default-features --features postgres
 RUN cargo build --release
