@@ -4,8 +4,8 @@ export interface MailConstructor {
 	recipient: string;
 	sender: string;
 	template: string;
-	priority: MailPriority | number;
 	data: Record<string, string>;
+	priority?: MailPriority | number;
 	allow_html?: boolean;
 	minify_html?: boolean;
 	schedule_at?: string | Date;

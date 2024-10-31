@@ -20,6 +20,9 @@ export class Meel {
 		const response = await ky
 			.post<SentMailConstructor>(`${this.baseUrl}/mails/send`, {
 				body: JSON.stringify(mail.toPlainObject()),
+				headers: {
+					"Content-Type": "application/json",
+				},
 			})
 			.json();
 
