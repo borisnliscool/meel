@@ -11,6 +11,7 @@
 		"url": "https://github.com/borisnliscool/meel",
 		"type": "git"
 	},
+	"homepage": "https://meel.dev",
 	"type": "module",
 	"module": "src/index.ts",
 	"main": "dist/index.js",
