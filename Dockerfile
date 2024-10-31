@@ -9,6 +9,7 @@ COPY backend/src src/
 COPY backend/migrations migrations/
 COPY backend/Cargo.toml Cargo.toml
 COPY backend/Cargo.lock Cargo.lock
+COPY LICENSE LICENSE
 
 RUN cargo install diesel_cli --no-default-features --features postgres
 RUN cargo build --release

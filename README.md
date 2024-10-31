@@ -7,6 +7,15 @@ templating system with layout files that can be edited to update all emails at o
 managing email designs. This system ensures consistency across email campaigns while reducing the time and effort
 required to make widespread changes.
 
+### Repository overview
+
+This repository is a monorepo containing the API itself and SDKs for different languages.
+
+| Directory              | Description              |
+|------------------------|--------------------------|
+| [backend](./backend)   | The API itself           |
+| [sdk/node](./sdk/node) | The Node SDK for the API |
+
 <br/>
 
 ### Development notes
