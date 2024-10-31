@@ -13,19 +13,23 @@ export class Meel {
 	}
 
 	public constructor({ baseUrl }: MeelAPIConstructor) {
-		this._baseUrl = baseUrl;
+		this._baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 	}
 
 	public async send(mail: Mail): Promise<SentMail> {
+		return this.batchSend([mail]).then((data) => data[0]);
+	}
+
+	public async batchSend(mails: Mail[]): Promise<SentMail[]> {
 		const response = await ky
-			.post<SentMailConstructor>(`${this.baseUrl}/mails/send`, {
-				body: JSON.stringify(mail.toPlainObject()),
+			.post<SentMailConstructor[]>(`${this.baseUrl}/mails/send`, {
+				body: JSON.stringify(mails.map((mail) => mail.toPlainObject())),
 				headers: {
 					"Content-Type": "application/json",
 				},
 			})
 			.json();
 
-		return new SentMail(response);
+		return response.map((data) => new SentMail(data));
 	}
 }

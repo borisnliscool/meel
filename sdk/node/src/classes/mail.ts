@@ -1,4 +1,5 @@
 import { MailPriority } from "../types";
+import { removeUndefinedValues } from "../utility";
 
 export interface MailConstructor {
 	recipient: string;
@@ -43,7 +44,7 @@ export class Mail {
 	}
 
 	public toPlainObject(): MailConstructor {
-		return {
+		return removeUndefinedValues<MailConstructor>({
 			recipient: this.recipient,
 			sender: this.sender,
 			template: this.template,
@@ -51,9 +52,9 @@ export class Mail {
 			data: this.data,
 			allow_html: this.allow_html,
 			minify_html: this.minify_html,
-			schedule_at: this.schedule_at,
+			schedule_at: this.schedule_at?.toISOString(),
 			reply_to: this.reply_to,
 			subject: this.subject,
-		};
+		});
 	}
 }
