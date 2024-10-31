@@ -1,0 +1,33 @@
+{
+	"name": "meel",
+	"description": "Typescript wrapper for the Meel API",
+	"version": "0.0.1",
+	"author": {
+		"name": "borisnliscool",
+		"url": "https://github.com/borisnliscool"
+	},
+	"license": "MIT",
+	"repository": {
+		"url": "https://github.com/borisnliscool/meel",
+		"type": "git"
+	},
+	"type": "module",
+	"module": "src/index.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "rimraf dist && tsc --project tsconfig.build.json && uglifyjs-folder dist/ -e -x .js -o dist/",
+		"prepublish": "bun run build"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"devDependencies": {
+		"rimraf": "^6.0.1",
+		"uglifyjs-folder": "^3.3.0"
+	},
+	"dependencies": {
+		"@borisnl/tried": "^1.0.5",
+		"ky": "^1.7.2"
+	}
+}

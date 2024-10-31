@@ -1,0 +1,27 @@
+name: CI Node SDK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "sdk/node/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "sdk/node/**"
+
+jobs:
+  build:
+    name: Build Node SDK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        working-directory: sdk/node
+        run: bun install
+      - name: Build SDK
+        working-directory: sdk/node
+        run: bun run build

@@ -1,0 +1,28 @@
+name: Release Node SDK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "sdk/node/package.json"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        working-directory: sdk/node
+        run: bun install
+      - name: Build SDK
+        working-directory: sdk/node
+        run: bun run build
+
+      - name: Publish to npm
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: sdk/node/package.json

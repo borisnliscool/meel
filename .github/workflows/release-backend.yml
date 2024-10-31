@@ -1,12 +1,16 @@
+name: Release Backend
+
 on:
   push:
     tags:
       - '*'
     paths:
       - "backend/**"
+      - "Dockerfile"
 
 jobs:
   build:
+    name: Release Backend
     runs-on: ubuntu-latest
     permissions:
       contents: write
