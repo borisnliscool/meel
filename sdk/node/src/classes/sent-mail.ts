@@ -1,6 +1,6 @@
-import { MailPriority } from "../types";
+import { MeelPriority } from "../types";
 
-export interface SentMailConstructor {
+export interface SentMeelConstructor {
 	id: number;
 	sender: string;
 	recipient: string;
@@ -11,16 +11,16 @@ export interface SentMailConstructor {
 	sent: boolean;
 }
 
-export class SentMail {
+export class SentMeel {
 	public readonly id: number;
 	public readonly sender: string;
 	public readonly recipient: string;
 	public readonly send_attempts: number;
-	public readonly priority: MailPriority | number;
+	public readonly priority: MeelPriority | number;
 	public readonly sent_at?: Date;
 	public readonly sent: boolean;
 
-	public constructor(data: SentMailConstructor) {
+	public constructor(data: SentMeelConstructor) {
 		this.id = data.id;
 		this.sender = data.sender;
 		this.recipient = data.recipient;

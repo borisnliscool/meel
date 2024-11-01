@@ -1,28 +1,28 @@
 import ky from "ky";
-import { Mail, SentMail, SentMailConstructor } from "../classes";
+import { Meel, SentMeel, SentMeelConstructor } from "../classes";
 
-interface MeelAPIConstructor {
+interface MeelSenderConstructor {
 	baseUrl: string;
 }
 
-export class Meel {
+export class MeelSender {
 	private _baseUrl: string;
 
 	public get baseUrl(): string {
 		return this._baseUrl;
 	}
 
-	public constructor({ baseUrl }: MeelAPIConstructor) {
+	public constructor({ baseUrl }: MeelSenderConstructor) {
 		this._baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 	}
 
-	public async send(mail: Mail): Promise<SentMail> {
+	public async send(mail: Meel): Promise<SentMeel> {
 		return this.batchSend([mail]).then((data) => data[0]);
 	}
 
-	public async batchSend(mails: Mail[]): Promise<SentMail[]> {
+	public async batchSend(mails: Meel[]): Promise<SentMeel[]> {
 		const response = await ky
-			.post<SentMailConstructor[]>(`${this.baseUrl}/mails/send`, {
+			.post<SentMeelConstructor[]>(`${this.baseUrl}/mails/send`, {
 				body: JSON.stringify(mails.map((mail) => mail.toPlainObject())),
 				headers: {
 					"Content-Type": "application/json",
@@ -30,6 +30,6 @@ export class Meel {
 			})
 			.json();
 
-		return response.map((data: SentMailConstructor) => new SentMail(data));
+		return response.map((data: SentMeelConstructor) => new SentMeel(data));
 	}
 }

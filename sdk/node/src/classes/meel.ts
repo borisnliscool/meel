@@ -1,12 +1,12 @@
-import { MailPriority } from "../types";
+import { MeelPriority } from "../types";
 import { removeUndefinedValues } from "../utility";
 
-export interface MailConstructor {
+export interface MeelConstructor {
 	recipient: string;
 	sender: string;
 	template: string;
 	data: Record<string, string>;
-	priority?: MailPriority | number;
+	priority?: MeelPriority | number;
 	allow_html?: boolean;
 	minify_html?: boolean;
 	schedule_at?: string | Date;
@@ -14,11 +14,11 @@ export interface MailConstructor {
 	subject?: string;
 }
 
-export class Mail {
+export class Meel {
 	public recipient: string;
 	public sender: string;
 	public template: string;
-	public priority: MailPriority | number;
+	public priority: MeelPriority | number;
 	public data: Record<string, string>;
 	public allow_html?: boolean;
 	public minify_html?: boolean;
@@ -26,12 +26,12 @@ export class Mail {
 	public reply_to?: string;
 	public subject?: string;
 
-	public constructor(data: MailConstructor) {
+	public constructor(data: MeelConstructor) {
 		this.recipient = data.recipient;
 		this.sender = data.sender;
 		this.subject = data.subject;
 		this.template = data.template;
-		this.priority = data.priority ?? MailPriority.NORMAL;
+		this.priority = data.priority ?? MeelPriority.NORMAL;
 		this.data = data.data ?? {};
 		this.allow_html = data.allow_html;
 		this.minify_html = data.minify_html;
@@ -43,8 +43,8 @@ export class Mail {
 			: undefined;
 	}
 
-	public toPlainObject(): MailConstructor {
-		return removeUndefinedValues<MailConstructor>({
+	public toPlainObject(): MeelConstructor {
+		return removeUndefinedValues<MeelConstructor>({
 			recipient: this.recipient,
 			sender: this.sender,
 			template: this.template,
