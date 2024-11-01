@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
-		"lib": ["es2015"],
+		"lib": ["es2022"],
+		"target": "ES5",
 
 		// Best practices
 		"strict": true,
