@@ -30,6 +30,6 @@ export class Meel {
 			})
 			.json();
 
-		return response.map((data) => new SentMail(data));
+		return response.map((data: SentMailConstructor) => new SentMail(data));
 	}
 }
