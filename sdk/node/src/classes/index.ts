@@ -1,2 +1,2 @@
 export * from "./meel";
-export * from "./sent-mail";
+export * from "./sent-meel";

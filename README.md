@@ -9,12 +9,13 @@ required to make widespread changes.
 
 ### Repository overview
 
-This repository is a monorepo containing the API itself and SDKs for different languages.
+This monorepo contains both the main API and SDKs for supported languages. For documentation of the SDKs, please refer
+to the individual SDK directories.
 
-| Directory              | Description              |
-|------------------------|--------------------------|
-| [backend](./backend)   | The API itself           |
-| [sdk/node](./sdk/node) | The Node SDK for the API |
+| Directory              | Description            |
+|------------------------|------------------------|
+| [backend](./backend)   | Core API functionality |
+| [sdk/node](./sdk/node) | Node SDK for the API   |
 
 <br/>
 
