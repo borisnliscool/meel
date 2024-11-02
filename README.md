@@ -29,7 +29,11 @@ git tag -a <version> -m "v<version>" && git push --tags
 
 #### Run Diesel migrations
 
+To create the initial database schema and relations, run the following command
+(you may need to install the diesel cli first by running `cargo install diesel_cli`):
+
 ```bash
+cd backend
 diesel migration run
 ```
 
@@ -44,6 +48,7 @@ diesel migration run
     - [x] Sending mail
         - [x] Send to mailing list
         - [ ] File attachments
+        - [ ] Validate email sender and recipient names
     - [x] Scheduling mail
     - [x] Fetching mail status
     - [x] Fetch templates list
