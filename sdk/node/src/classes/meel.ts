@@ -14,6 +14,9 @@ export interface MeelConstructor {
 	subject?: string;
 }
 
+/**
+ * Meel is a class that represents a mail to be sent to a recipient.
+ */
 export class Meel {
 	public recipient: string;
 	public sender: string;
@@ -43,6 +46,9 @@ export class Meel {
 			: undefined;
 	}
 
+	/**
+	 * Returns a plain object representation of the Meel instance
+	 */
 	public toPlainObject(): MeelConstructor {
 		return removeUndefinedValues<MeelConstructor>({
 			recipient: this.recipient,

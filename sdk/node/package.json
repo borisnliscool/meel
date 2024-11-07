@@ -1,7 +1,7 @@
 {
 	"name": "meel",
 	"description": "Typescript wrapper for the Meel project",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"author": {
 		"name": "borisnliscool",
 		"url": "https://github.com/borisnliscool"

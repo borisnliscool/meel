@@ -11,6 +11,9 @@ export interface SentMeelConstructor {
 	sent: boolean;
 }
 
+/**
+ * SentMeel is a class that represents a mail that has been sent to a recipient.
+ */
 export class SentMeel {
 	public readonly id: number;
 	public readonly sender: string;
