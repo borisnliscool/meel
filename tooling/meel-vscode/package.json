@@ -13,6 +13,7 @@
 		"type": "git"
 	},
 	"homepage": "https://meel.dev",
+	"packageManager": "pnpm@9.12.3",
 	"engines": {
 		"vscode": "^1.95.0"
 	},

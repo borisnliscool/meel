@@ -21,7 +21,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
         with:
-          version: 8
           package_json_file: tooling/meel-vscode/package.json
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
@@ -32,8 +31,10 @@ jobs:
       - name: Install dependencies
         working-directory: tooling/meel-vscode
         run: pnpm install --frozen-lockfile
-      - name: Install vsce
-        run: pnpm install -g vsce
+      - name: Install @vscode/vsce
+        run: pnpm install -g @vscode/vsce
+      - name: Copy license for vsce
+        run: cp LICENSE tooling/meel-vscode
       - name: Package VSCode Extension
         working-directory: tooling/meel-vscode
-        run: pnpm run vsce package
+        run: pnpm vsce package
