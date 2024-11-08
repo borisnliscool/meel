@@ -43,14 +43,14 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "bun run package",
-		"compile": "bun run check-types && node esbuild.js",
+		"vscode:prepublish": "pnpm run package",
+		"compile": "pnpm run check-types && node esbuild.js",
 		"watch": "npm-run-all -p watch:*",
 		"watch:esbuild": "node esbuild.js --watch",
 		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-		"package": "bun run check-types && node esbuild.js --production",
+		"package": "pnpm run check-types && node esbuild.js --production",
 		"check-types": "tsc --noEmit",
-		"build": "bun run compile"
+		"build": "pnpm run compile"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.95.0",

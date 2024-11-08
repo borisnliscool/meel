@@ -14,14 +14,23 @@ on:
 
 jobs:
   build:
-    name: Build Node SDK
+    name: Build VSCode Extension
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
       - name: Install dependencies
         working-directory: tooling/meel-vscode
-        run: bun install
-      - name: Build SDK
+        run: pnpm install --frozen-lockfile
+      - name: Install vsce
+        run: pnpm install -g vsce
+      - name: Package VSCode Extension
         working-directory: tooling/meel-vscode
-        run: bun run build
+        run: pnpm run vsce package
