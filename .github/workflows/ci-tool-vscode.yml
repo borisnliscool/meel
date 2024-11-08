@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "tooling/meel-vscode/**"
+      - ".github/workflows/ci-tool-vscode.yml"
   pull_request:
     branches:
       - main
