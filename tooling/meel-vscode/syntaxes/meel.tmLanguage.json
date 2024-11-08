@@ -1,0 +1,10 @@
+{
+	"name": "meel",
+	"scopeName": "source.meel",
+	"fileTypes": ["meel"],
+	"patterns": [
+		{
+			"include": "text.html.basic"
+		}
+	]
+}

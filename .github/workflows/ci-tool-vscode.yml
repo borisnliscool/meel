@@ -1,0 +1,27 @@
+name: CI Tool VSCode
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tooling/meel-vscode/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "tooling/meel-vscode/**"
+
+jobs:
+  build:
+    name: Build Node SDK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        working-directory: tooling/meel-vscode
+        run: bun install
+      - name: Build SDK
+        working-directory: tooling/meel-vscode
+        run: bun run build
