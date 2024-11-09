@@ -46,4 +46,4 @@ jobs:
 
       - name: Package VSCode Extension
         working-directory: tooling/meel-vscode
-        run: pnpm vsce package
+        run: pnpm vsce package --no-dependencies
