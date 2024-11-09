@@ -20,9 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+
       - name: Install dependencies
         working-directory: sdk/node
         run: bun install
+
+      - name: Lint
+        working-directory: sdk/node
+        run: bun run lint
+
       - name: Build SDK
         working-directory: sdk/node
         run: bun run build

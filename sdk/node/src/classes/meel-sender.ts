@@ -1,6 +1,6 @@
-import Try from "@borisnl/tried";
-import ky from "ky";
-import { Meel, MeelError, SentMeel, SentMeelConstructor } from ".";
+import Try from '@borisnl/tried';
+import ky from 'ky';
+import { Meel, MeelError, SentMeel, SentMeelConstructor } from '.';
 
 interface MeelSenderConstructor {
 	baseUrl: string;
@@ -30,7 +30,7 @@ export class MeelSender {
 	}
 
 	public constructor({ baseUrl }: MeelSenderConstructor) {
-		this._baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+		this._baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 	}
 
 	/**
@@ -41,7 +41,7 @@ export class MeelSender {
 	 * @throws {MeelError} If the mail could not be sent
 	 */
 	public async send(mail: Meel): Promise<SentMeel> {
-		return this.batchSend([mail]).then((data) => data[0]);
+		return this.batchSend([mail]).then(data => data[0]);
 	}
 
 	/**
@@ -55,16 +55,18 @@ export class MeelSender {
 		const response = await Try(() =>
 			ky
 				.post<SentMeelConstructor[]>(`${this.baseUrl}/mails/send`, {
-					body: JSON.stringify(mails.map((mail) => mail.toPlainObject())),
+					body: JSON.stringify(
+						mails.map(mail => mail.toPlainObject()),
+					),
 					headers: {
-						"Content-Type": "application/json",
+						'Content-Type': 'application/json',
 					},
 				})
-				.json()
+				.json(),
 		);
 
 		if (!response) {
-			throw new MeelError("Failed to send mail", 500);
+			throw new MeelError('Failed to send mail', 500);
 		}
 
 		return response.map((data: SentMeelConstructor) => new SentMeel(data));

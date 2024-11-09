@@ -22,19 +22,28 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           package_json_file: tooling/meel-vscode/package.json
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
           cache-dependency-path: tooling/meel-vscode/pnpm-lock.yaml
+
       - name: Install dependencies
         working-directory: tooling/meel-vscode
         run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: tooling/meel-vscode
+        run: pnpm lint
+
       - name: Install @vscode/vsce
         run: pnpm install -g @vscode/vsce
+
       - name: Copy license for vsce
         run: cp LICENSE tooling/meel-vscode
+
       - name: Package VSCode Extension
         working-directory: tooling/meel-vscode
         run: pnpm vsce package

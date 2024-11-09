@@ -18,13 +18,20 @@
 	"types": "dist/index.d.ts",
 	"scripts": {
 		"build": "rimraf dist && tsc --project tsconfig.build.json && uglifyjs-folder dist/ -e -x .js -o dist/",
-		"prepublish": "bun run build"
+		"prepublish": "bun run build",
+		"lint": "bun run prettier . --check && eslint .",
+		"format": "pnpm prettier . --write"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"
 	},
 	"devDependencies": {
+		"@eslint/js": "^9.14.0",
+		"eslint": "^9.14.0",
+		"globals": "^15.12.0",
+		"prettier": "3.3.3",
 		"rimraf": "^6.0.1",
+		"typescript-eslint": "^8.13.0",
 		"uglifyjs-folder": "^3.3.0"
 	},
 	"dependencies": {

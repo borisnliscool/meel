@@ -1,4 +1,4 @@
-import { MeelPriority } from "../types";
+import { MeelPriority } from '../types';
 
 export interface SentMeelConstructor {
 	id: number;

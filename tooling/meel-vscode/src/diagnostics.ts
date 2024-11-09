@@ -1,11 +1,11 @@
-import * as vscode from "vscode";
-import { bracesTextDecoration, placeholderTextDecoration } from "./decorations";
+import * as vscode from 'vscode';
+import { bracesTextDecoration, placeholderTextDecoration } from './decorations';
 
 export function checkForUnclosedBraces(
 	document: vscode.TextDocument,
-	diagnosticCollection: vscode.DiagnosticCollection
+	diagnosticCollection: vscode.DiagnosticCollection,
 ): void {
-	if (document.languageId !== "meel") {
+	if (document.languageId !== 'meel') {
 		return;
 	}
 
@@ -23,43 +23,43 @@ export function checkForUnclosedBraces(
 		const matchIndex = match.index;
 
 		switch (matchText) {
-			case "{{": {
+			case '{{': {
 				stack.push(matchIndex);
 				break;
 			}
-			case "}}": {
+			case '}}': {
 				if (stack.length > 0) {
 					const openingBraceIndex = stack.pop()!;
 
 					yellowBracesRanges.push(
 						new vscode.Range(
 							document.positionAt(openingBraceIndex),
-							document.positionAt(openingBraceIndex + 2)
+							document.positionAt(openingBraceIndex + 2),
 						),
 						new vscode.Range(
 							document.positionAt(matchIndex),
-							document.positionAt(matchIndex + 2)
-						)
+							document.positionAt(matchIndex + 2),
+						),
 					);
 
 					lightBlueTextRanges.push(
 						new vscode.Range(
 							document.positionAt(openingBraceIndex + 2),
-							document.positionAt(matchIndex)
-						)
+							document.positionAt(matchIndex),
+						),
 					);
 				} else {
 					const range = new vscode.Range(
 						document.positionAt(matchIndex),
-						document.positionAt(matchIndex + 2)
+						document.positionAt(matchIndex + 2),
 					);
 
 					diagnostics.push(
 						new vscode.Diagnostic(
 							range,
-							"Unmatched closing brace }}",
-							vscode.DiagnosticSeverity.Error
-						)
+							'Unmatched closing brace }}',
+							vscode.DiagnosticSeverity.Error,
+						),
 					);
 
 					yellowBracesRanges.push(range);
@@ -73,15 +73,15 @@ export function checkForUnclosedBraces(
 		const unmatchedIndex = stack.pop()!;
 		const range = new vscode.Range(
 			document.positionAt(unmatchedIndex),
-			document.positionAt(unmatchedIndex + 2)
+			document.positionAt(unmatchedIndex + 2),
 		);
 
 		diagnostics.push(
 			new vscode.Diagnostic(
 				range,
-				"Unmatched opening brace {{",
-				vscode.DiagnosticSeverity.Error
-			)
+				'Unmatched opening brace {{',
+				vscode.DiagnosticSeverity.Error,
+			),
 		);
 
 		yellowBracesRanges.push(range);

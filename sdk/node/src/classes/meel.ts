@@ -1,5 +1,5 @@
-import { MeelPriority } from "../types";
-import { removeUndefinedValues } from "../utility";
+import { MeelPriority } from '../types';
+import { removeUndefinedValues } from '../utility';
 
 export interface MeelConstructor {
 	recipient: string;

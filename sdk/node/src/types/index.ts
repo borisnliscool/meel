@@ -1,1 +1,1 @@
-export * from "./meel-priority";
+export * from './meel-priority';

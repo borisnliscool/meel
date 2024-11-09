@@ -1,1 +1,1 @@
-export * from "./remove-undefined-values";
+export * from './remove-undefined-values';
