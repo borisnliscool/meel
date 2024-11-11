@@ -9,13 +9,14 @@ required to make widespread changes.
 
 ### Repository overview
 
-This monorepo contains both the main API and SDKs for supported languages. For documentation of the SDKs, please refer
-to the individual SDK directories.
+This monorepo includes the main API, SDKs for supported languages, and tools to simplify the use of Meel templating syntax. 
+Refer to the individual SDK directories for detailed documentation.
 
-| Directory              | Description            |
-|------------------------|------------------------|
-| [backend](./backend)   | Core API functionality |
-| [sdk/node](./sdk/node) | Node SDK for the API   |
+| Directory                                     | Description                            |
+|-----------------------------------------------|----------------------------------------|
+| [backend](./backend)                          | Core API functionality                 |
+| [sdk/node](./sdk/node)                        | Node SDK for the API                   |
+| [tooling/meel-vscode]( ./tooling/meel-vscode) | VSCode plugin                          |
 
 <br/>
 
