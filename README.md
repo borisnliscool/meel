@@ -1,4 +1,8 @@
-![banner](https://github.com/user-attachments/assets/707f7cb0-f921-4f26-aff7-6efa68cc3d37)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/c315ec64-9b66-4e75-955e-034a542def11">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/707f7cb0-f921-4f26-aff7-6efa68cc3d37">
+  <img alt="Shows the black Meel logo in light theme, and the white logo in dark theme." src="https://github.com/user-attachments/assets/707f7cb0-f921-4f26-aff7-6efa68cc3d37">
+</picture>
 
 ### About the project
 
