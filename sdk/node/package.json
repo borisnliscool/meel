@@ -19,7 +19,7 @@
 	"scripts": {
 		"build": "rimraf dist && tsc --project tsconfig.build.json && uglifyjs-folder dist/ -e -x .js -o dist/",
 		"prepublish": "bun run build",
-		"lint": "bun run prettier . --check && eslint .",
+		"lint": "bun run prettier . --check && eslint",
 		"format": "pnpm prettier . --write"
 	},
 	"peerDependencies": {
