@@ -17,6 +17,7 @@ use crate::utils::api_error::{ApiError, ApiErrorCode};
 pub struct SendMailRequest {
     pub recipient: String,
     pub sender: String,
+    pub subject: String,
     pub template: String,
     pub priority: i32,
     pub data: HashMap<String, String>,
@@ -24,7 +25,6 @@ pub struct SendMailRequest {
     pub minify_html: Option<bool>,
     pub schedule_at: Option<String>,
     pub reply_to: Option<String>,
-    pub subject: Option<String>,
     // TODO: Handle attachments
 }
 
@@ -106,9 +106,20 @@ pub async fn send_mail(pool: Extension<Arc<database::ConnectionPool>>, mail: Sen
     };
 
     // TODO: Parse the subject from the template if it is not passed by the user.
+    
+    if mail.subject.is_empty() || mail.subject.trim().len() < 6 {
+        return Err(
+            ApiError::new(
+                StatusCode::BAD_REQUEST,
+                ApiErrorCode::Unknown,
+                "Missing or invalid `subject`".to_string(),
+                HashMap::new(),
+            )
+        );
+    }
 
     let subject = templating::apply_placeholders(
-        mail.subject.unwrap_or("".to_string()),
+        mail.subject,
         mail.data.clone(),
         // Setting allow_html to true here is a bit of a hack, as if we don't it will replace spaces
         // and special characters with html equivalents, which we don't want.

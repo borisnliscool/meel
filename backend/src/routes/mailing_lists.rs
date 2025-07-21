@@ -189,7 +189,7 @@ pub struct SendMailsRequest {
     minify_html: Option<bool>,
     schedule_at: Option<String>,
     reply_to: Option<String>,
-    subject: Option<String>,
+    subject: String,
     // TODO: Handle attachments
 }
 
@@ -212,6 +212,17 @@ pub async fn send_mailing_list_mails(pool: Extension<Arc<database::ConnectionPoo
             ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to load subscribers: ".to_string() + &err.to_string(), HashMap::new())
         ),
     };
+
+    if data.subject.is_empty() || data.subject.trim().len() < 6 {
+        return Err(
+            ApiError::new(
+                StatusCode::BAD_REQUEST,
+                ApiErrorCode::Unknown,
+                "Missing or invalid `subject`".to_string(),
+                HashMap::new(),
+            )
+        );
+    }
 
     for subscriber in subscribers {
         let mut placeholder_data = data.data.clone();
