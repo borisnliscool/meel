@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-
 use axum::{Extension, Json};
 use axum::extract::Path;
 use axum::http::StatusCode;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 use serde::{Deserialize, Serialize};
-
+use serde_json::Value;
 use crate::{database, routes};
 use crate::database::models::{MailingList, MailingListSubscriber, NewMailingList, NewMailingListSubscriber};
 use crate::routes::mails::SendMailRequest;
+use crate::templating::{TemplateDataMap};
 use crate::utils::api_error::{ApiError, ApiErrorCode};
 
 #[derive(Serialize)]
@@ -178,13 +178,12 @@ pub async fn unsubscribe_user(pool: Extension<Arc<database::ConnectionPool>>, Pa
     }
 }
 
-
 #[derive(Deserialize)]
 pub struct SendMailsRequest {
     sender: String,
     template: String,
     priority: i32,
-    data: HashMap<String, String>,
+    data: TemplateDataMap,
     allow_html: Option<bool>,
     minify_html: Option<bool>,
     schedule_at: Option<String>,
@@ -226,8 +225,8 @@ pub async fn send_mailing_list_mails(pool: Extension<Arc<database::ConnectionPoo
 
     for subscriber in subscribers {
         let mut placeholder_data = data.data.clone();
-        placeholder_data.insert("subscriber_name".to_string(), subscriber.name);
-        placeholder_data.insert("subscriber_email".to_string(), subscriber.email.clone());
+        placeholder_data.insert("subscriber_name".to_string(), Value::String(subscriber.name));
+        placeholder_data.insert("subscriber_email".to_string(), Value::String(subscriber.email.clone()));
 
         routes::mails::send_mail(
             pool.clone(),

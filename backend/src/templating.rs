@@ -1,35 +1,42 @@
+use crate::utils;
+use ammonia::clean_text;
+use minify_html::{minify, Cfg};
+use regex::Regex;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use ammonia::clean_text;
-use minify_html::{Cfg, minify};
-use regex::Regex;
-
-use crate::utils;
+pub type TemplateDataMap = HashMap<String, Value>;
 
 pub fn get_template_directory() -> String {
-    format!("{}/templates", utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap())
+    format!(
+        "{}/templates",
+        utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap()
+    )
 }
 
-fn get_globals() -> Result<HashMap<String, String>, String> {
-    let globals_path = format!("{}/globals.json", utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap());
+fn get_globals() -> Result<TemplateDataMap, String> {
+    let globals_path = format!(
+        "{}/globals.json",
+        utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap()
+    );
 
     let mut file = match File::open(globals_path) {
         Ok(file) => file,
-        Err(_) => return Err("Failed to open globals file".to_string())
+        Err(_) => return Err("Failed to open globals file".to_string()),
     };
 
     let mut contents = String::new();
     match file.read_to_string(&mut contents) {
         Ok(_) => (),
-        Err(_) => return Err("Failed to read globals file".to_string())
+        Err(_) => return Err("Failed to read globals file".to_string()),
     };
 
-    let globals: HashMap<String, String> = match serde_json::from_str(&contents) {
+    let globals: TemplateDataMap = match serde_json::from_str(&contents) {
         Ok(globals) => globals,
-        Err(_) => return Err("Failed to parse globals file".to_string())
+        Err(_) => return Err("Failed to parse globals file".to_string()),
     };
 
     Ok(globals)
@@ -49,7 +56,7 @@ fn get_template_file(template_name: String) -> Result<File, String> {
 
     match File::open(template_path) {
         Ok(file) => Ok(file),
-        Err(_) => Err(format!("Template {} not found", template_name))
+        Err(_) => Err(format!("Template {template_name} not found")),
     }
 }
 
@@ -59,7 +66,7 @@ fn get_plain_text_file(template_name: String) -> Result<File, String> {
 
     match File::open(template_path) {
         Ok(file) => Ok(file),
-        Err(_) => Err(format!("Template {} not found", template_name))
+        Err(_) => Err(format!("Template {template_name} not found")),
     }
 }
 
@@ -70,7 +77,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
 
     let template_parent_path = match Path::new(&path).parent() {
         Some(parent) => parent,
-        None => return Err("Failed to get parent directory".to_string())
+        None => return Err("Failed to get parent directory".to_string()),
     };
 
     let layout_path = format!("{}/layout.meel", template_parent_path.display());
@@ -78,13 +85,13 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
     let layout_contents = if Path::new(&layout_path).exists() {
         let mut layout_file = match File::open(&layout_path) {
             Ok(file) => file,
-            Err(_) => return Err("Failed to open layout file".to_string())
+            Err(_) => return Err("Failed to open layout file".to_string()),
         };
 
         let mut layout_contents = String::new();
         match layout_file.read_to_string(&mut layout_contents) {
             Ok(_) => layout_contents,
-            Err(_) => return Err("Failed to read layout file".to_string())
+            Err(_) => return Err("Failed to read layout file".to_string()),
         }
     } else {
         "<slot />".to_string()
@@ -92,7 +99,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
 
     let re = match Regex::new(r"<slot( ?)/>|<slot>(.*?)</slot>") {
         Ok(re) => re,
-        Err(_) => return Err("Failed to compile regex".to_string())
+        Err(_) => return Err("Failed to compile regex".to_string()),
     };
 
     // TODO: The indenting isn't correct for nested slots. We might actually want to compress the content though.
@@ -105,60 +112,114 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
     }
 }
 
-fn create_placeholder_regex() -> Result<Regex, String> {
-    match Regex::new(r"\{\{\s*(.*?)\s*}}") {
-        Ok(re) => Ok(re),
-        Err(_) => Err("Failed to compile regex".to_string())
-    }
-}
-
 /// Apply placeholders to the supplied template contents.
-pub fn apply_placeholders(mut contents: String, data: HashMap<String, String>, allow_html: bool) -> Result<String, String> {
-    let re = create_placeholder_regex()?;
-    let placeholders: Vec<String> = re.find_iter(&contents).map(|m| m.as_str().to_string()).collect();
+pub fn apply_placeholders(
+    contents: String,
+    data: TemplateDataMap,
+    allow_html: bool,
+) -> Result<String, String> {
+    let template =
+        mustache::compile_str(&contents).map_err(|_| "Failed to compile template".to_string())?;
 
-    for capture in placeholders {
-        let key = &capture[2..capture.len() - 2].trim().to_string();
-        if let Some(value) = data.get(key) {
-            let replacement = if allow_html { value.clone() } else { clean_text(value) };
-            contents = contents.replace(&capture, &replacement);
+    let cleaned_data = if allow_html {
+        data
+    } else {
+        let mut cleaned_data = TemplateDataMap::new();
+
+        fn clean(data: Value) -> Value {
+            match data {
+                Value::Null => Value::Null,
+                Value::Bool(bool) => Value::Bool(bool),
+                Value::Number(num) => Value::Number(num),
+                Value::String(value) => Value::String(clean_text(&value)),
+                Value::Array(array) => {
+                    Value::Array(array.iter().map(|arg: &Value| clean(arg.clone())).collect())
+                }
+                Value::Object(value) => Value::Object(
+                    value
+                        .iter()
+                        .map(|(key, arg)| (key.clone(), clean(arg.clone())))
+                        .collect(),
+                ),
+            }
         }
-    }
 
-    Ok(contents)
-}
-
-/// Get the placeholders in a template.
-pub fn get_template_placeholders(template_name: String) -> Result<Vec<String>, String> {
-    let mut file = get_template_file(template_name.clone())?;
-
-    let mut contents = String::new();
-    match file.read_to_string(&mut contents) {
-        Ok(_) => (),
-        Err(_) => return Err("Failed to read template file".to_string())
+        for (key, value) in data {
+            cleaned_data.insert(key, clean(value));
+        }
+        cleaned_data
     };
 
-    let contents = apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?;
+    template
+        .render_to_string(&cleaned_data)
+        .map_err(|_| "Failed to render template".to_string())
+}
 
-    let re = create_placeholder_regex()?;
-    Ok(re.find_iter(&contents).map(|m| m.as_str()[2..m.len() - 2].trim().to_string()).collect())
+#[test]
+fn test_apply_placeholders() {
+    assert_eq!(
+        apply_placeholders(
+            "Hello {{ what }}!".to_string(),
+            TemplateDataMap::from([("what".to_string(), Value::String("World".to_string()))]),
+            false
+        )
+        .unwrap(),
+        "Hello World!"
+    );
+
+    assert_eq!(
+        apply_placeholders(
+            "Hello {{ what }}!".to_string(),
+            TemplateDataMap::from([(
+                "what".to_string(),
+                Value::String("<strong>World</strong>".to_string())
+            )]),
+            true
+        )
+        .unwrap(),
+        "Hello &lt;strong&gt;World&lt;/strong&gt;!"
+    );
+
+    assert_eq!(
+        apply_placeholders(
+            "{{#things}}{{.}}{{/things}}".to_string(),
+            TemplateDataMap::from([(
+                "things".to_string(),
+                Value::Array(vec![
+                    Value::String("One".to_string()),
+                    Value::String("Two".to_string())
+                ])
+            )]),
+            false
+        )
+        .unwrap(),
+        "OneTwo"
+    );
 }
 
 /// Render a template with the given data.
-pub fn render(template_name: String, mut data: HashMap<String, String>, allow_html: bool, minify_html: bool) -> Result<String, String> {
+pub fn render(
+    template_name: String,
+    mut data: TemplateDataMap,
+    allow_html: bool,
+    minify_html: bool,
+) -> Result<String, String> {
     let mut file = get_template_file(template_name.clone())?;
 
     let mut contents = String::new();
     match file.read_to_string(&mut contents) {
         Ok(_) => (),
-        Err(_) => return Err("Failed to read template file".to_string())
+        Err(_) => return Err("Failed to read template file".to_string()),
     };
 
     let globals = get_globals().unwrap_or_default();
     data.extend(globals);
 
     let content = apply_placeholders(
-        apply_layout(format!("{}/{}", get_template_directory(), &template_name), contents)?,
+        apply_layout(
+            format!("{}/{}", get_template_directory(), &template_name),
+            contents,
+        )?,
         data,
         allow_html,
     )?;
@@ -173,17 +234,20 @@ pub fn render(template_name: String, mut data: HashMap<String, String>, allow_ht
     match String::from_utf8(minify(content.as_ref(), &cfg)) {
         Ok(content) => Ok(content),
         // We failed to minify here so return the original content
-        Err(_) => Ok(content)
+        Err(_) => Ok(content),
     }
 }
 
-pub fn render_plain_text(template_name: String, mut data: HashMap<String, String>) -> Result<String, String> {
+pub fn render_plain_text(
+    template_name: String,
+    mut data: TemplateDataMap,
+) -> Result<String, String> {
     let mut file = get_plain_text_file(template_name.clone())?;
 
     let mut contents = String::new();
     match file.read_to_string(&mut contents) {
         Ok(_) => (),
-        Err(_) => return Err("Failed to read template file".to_string())
+        Err(_) => return Err("Failed to read template file".to_string()),
     };
 
     let globals = get_globals().unwrap_or_default();
