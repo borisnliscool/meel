@@ -118,6 +118,7 @@ pub fn apply_placeholders(
     data: TemplateDataMap,
     allow_html: bool,
 ) -> Result<String, String> {
+    // TODO: would be cool if we could reference (i.e. import) other templates which I believe is supported by mustache
     let template =
         mustache::compile_str(&contents).map_err(|_| "Failed to compile template".to_string())?;
 
