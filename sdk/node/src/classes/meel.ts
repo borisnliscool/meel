@@ -5,13 +5,13 @@ export interface MeelConstructor {
 	recipient: string;
 	sender: string;
 	template: string;
-	data: Record<string, string>;
+	data: Object;
+	subject: string;
 	priority?: MeelPriority | number;
 	allow_html?: boolean;
 	minify_html?: boolean;
 	schedule_at?: string | Date;
 	reply_to?: string;
-	subject?: string;
 }
 
 /**
@@ -22,12 +22,12 @@ export class Meel {
 	public sender: string;
 	public template: string;
 	public priority: MeelPriority | number;
-	public data: Record<string, string>;
+	public data: Object;
+	public subject: string;
 	public allow_html?: boolean;
 	public minify_html?: boolean;
 	public schedule_at?: Date;
 	public reply_to?: string;
-	public subject?: string;
 
 	public constructor(data: MeelConstructor) {
 		this.recipient = data.recipient;
