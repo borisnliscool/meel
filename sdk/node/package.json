@@ -1,7 +1,7 @@
 {
 	"name": "meel",
 	"description": "Typescript wrapper for the Meel project",
-	"version": "0.0.10",
+	"version": "0.0.11",
 	"author": {
 		"name": "borisnliscool",
 		"url": "https://github.com/borisnliscool"
@@ -19,8 +19,8 @@
 	"scripts": {
 		"build": "rimraf dist && tsc --project tsconfig.build.json && uglifyjs-folder dist/ -e -x .js -o dist/",
 		"prepublish": "bun run build",
-		"lint": "bun run prettier src/ --check && eslint",
-		"format": "pnpm prettier . --write"
+		"lint": "bun run prettier src/ --check && bun run eslint",
+		"format": "bun run prettier . --write"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"

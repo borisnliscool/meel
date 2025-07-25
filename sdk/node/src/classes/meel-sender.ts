@@ -2,35 +2,31 @@ import Try from '@borisnl/tried';
 import ky from 'ky';
 import { Meel, MeelError, SentMeel, SentMeelConstructor } from '.';
 
-interface MeelSenderConstructor {
-	baseUrl: string;
-}
-
 /**
  * MeelSender is a class that sends Meel instances to a specified base url.
  *
  * @example
- * import { MeelSender } from "meel";
+ * import { Meel, MeelSender } from "meel";
  *
  * const sender = new MeelSender({ baseUrl: "http://localhost:8080" });
+ *
  * const mail = new Meel({
- * 	recipient: "boris@meel.dev",
+ * 	recipient: "Boris <boris@example.com>",
  * 	sender: "me@example.com",
  * 	template: "hello",
- * 	data: { name: "Boris" },
+ * 	data: {
+ * 		name: "Boris",
+ * 		things: ["a", "b", "c"]
+ * 	},
  * });
  *
  * const sentMail = await sender.send(mail);
  */
 export class MeelSender {
-	private _baseUrl: string;
+	private readonly baseUrl: string;
 
-	public get baseUrl(): string {
-		return this._baseUrl;
-	}
-
-	public constructor({ baseUrl }: MeelSenderConstructor) {
-		this._baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+	public constructor({ baseUrl }: { baseUrl: string }) {
+		this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 	}
 
 	/**
