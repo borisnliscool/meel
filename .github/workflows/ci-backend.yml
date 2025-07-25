@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "backend/**"
+      - "Dockerfile"
       - ".github/workflows/ci-backend.yml"
   pull_request:
     branches:
