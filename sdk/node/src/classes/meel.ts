@@ -5,7 +5,7 @@ export interface MeelConstructor {
 	recipient: string;
 	sender: string;
 	template: string;
-	data: Object;
+	data: object;
 	subject: string;
 	priority?: MeelPriority | number;
 	allow_html?: boolean;
@@ -22,7 +22,7 @@ export class Meel {
 	public sender: string;
 	public template: string;
 	public priority: MeelPriority | number;
-	public data: Object;
+	public data: object;
 	public subject: string;
 	public allow_html?: boolean;
 	public minify_html?: boolean;

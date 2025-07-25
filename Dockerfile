@@ -1,7 +1,6 @@
-FROM rust:1.79-slim-buster
+FROM rust:1.88-slim-bullseye
 
-RUN apt-get update
-RUN apt-get install libpq-dev libssl-dev pkg-config -y
+RUN apt update && apt install libpq-dev libssl-dev pkg-config -y
 
 WORKDIR /usr/src/meel
 
