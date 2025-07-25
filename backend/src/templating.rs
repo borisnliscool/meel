@@ -52,7 +52,7 @@ fn get_template_file(template_name: String) -> Result<File, String> {
         return Err("Template name cannot contain '..'".to_string());
     }
 
-    let template_path = format!("{}/{}.meel", get_template_directory(), template_name);
+    let template_path = format!("{}/{}.mustache", get_template_directory(), template_name);
 
     match File::open(template_path) {
         Ok(file) => Ok(file),
@@ -80,7 +80,7 @@ fn apply_layout(path: String, contents: String) -> Result<String, String> {
         None => return Err("Failed to get parent directory".to_string()),
     };
 
-    let layout_path = format!("{}/layout.meel", template_parent_path.display());
+    let layout_path = format!("{}/layout.mustache", template_parent_path.display());
 
     let layout_contents = if Path::new(&layout_path).exists() {
         let mut layout_file = match File::open(&layout_path) {

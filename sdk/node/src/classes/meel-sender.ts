@@ -12,7 +12,7 @@ interface MeelSenderConstructor {
  * @example
  * import { MeelSender } from "meel";
  *
- * const sender = new MeelSender({ baseUrl: "https://api.meel.dev/" });
+ * const sender = new MeelSender({ baseUrl: "http://localhost:8080" });
  * const mail = new Meel({
  * 	recipient: "boris@meel.dev",
  * 	sender: "me@example.com",

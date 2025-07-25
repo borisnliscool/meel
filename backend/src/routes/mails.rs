@@ -126,8 +126,14 @@ pub async fn send_mail(
         // Setting allow_html to true here is a bit of a hack, as if we don't it will replace spaces
         // and special characters with html equivalents, which we don't want.
         true,
-    )
-    .unwrap_or("".to_string());
+    ).map_err(|err| {
+        ApiError::new(
+            StatusCode::BAD_REQUEST,
+            ApiErrorCode::Unknown,
+            "Failed to apply placeholders to subject: ".to_string() + &err.to_string(),
+            HashMap::new(),
+        )
+    })?;
 
     let new_mail = NewMail {
         sender: &mail.sender,

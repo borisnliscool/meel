@@ -16,7 +16,7 @@ pub struct Template {
 }
 
 pub async fn get_templates() -> Result<Json<Vec<Template>>, ApiError> {
-    let entries = match glob::glob(&format!("{}/**/*.meel", templating::get_template_directory())) {
+    let entries = match glob::glob(&format!("{}/**/*.mustache", templating::get_template_directory())) {
         Ok(entries) => entries,
         Err(_) => return Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ApiErrorCode::Unknown, "Failed to glob templates".to_string(), HashMap::new())),
     };

@@ -20,7 +20,6 @@ Refer to the individual SDK directories for detailed documentation.
 |-----------------------------------------------|----------------------------------------|
 | [backend](./backend)                          | Core API functionality                 |
 | [sdk/node](./sdk/node)                        | Node SDK for the API                   |
-| [tooling/meel-vscode]( ./tooling/meel-vscode) | VSCode plugin                          |
 
 <br/>
 
@@ -46,7 +45,6 @@ diesel migration run
 
 - [x] Templating engine
     - [ ] Component system
-    - [ ] .meel language syntax highlighting
     - [ ] i18n
     - [ ] simple if and for logic
 - API Routes
