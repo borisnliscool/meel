@@ -11,6 +11,40 @@ templating system with layout files that can be edited to update all emails at o
 managing email designs. This system ensures consistency across email campaigns while reducing the time and effort
 required to make widespread changes.
 
+### Usage
+
+To use Meel, you can either compile the backend yourself, or use the automatically built Docker image. The Docker image
+is available on GitHub at [borisnliscool/meel](https://github.com/borisnliscool/meel/pkgs/container/meel).
+
+**Example**
+
+```yml
+services:
+  db:
+    image: postgres
+    restart: unless-stopped
+    shm_size: 128mb
+    env_file:
+      - .env.production
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  meel:
+    image: ghcr.io/borisnliscool/meel:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.production
+    depends_on:
+      - db
+    volumes:
+      - ./data:/usr/src/meel/data
+
+volumes:
+  db_data:
+```
+
 ### Repository overview
 
 This monorepo includes the main API, SDKs for supported languages, and tools to simplify the use of Meel templating syntax. 
