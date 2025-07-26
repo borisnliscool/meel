@@ -13,4 +13,6 @@ COPY LICENSE LICENSE
 RUN cargo install diesel_cli --no-default-features --features postgres
 RUN cargo build --release
 
+LABEL org.opencontainers.image.source=https://github.com/borisnliscool/meel
+
 CMD ["/bin/sh", "-c", "diesel migration run && target/release/meel"]
