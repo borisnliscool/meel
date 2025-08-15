@@ -1,6 +1,3 @@
-volumes:
-  data:
-
 services:
   db:
     image: postgres
@@ -24,3 +21,6 @@ services:
       - db
     volumes:
       - ./data:/usr/src/meel/data
+
+volumes:
+  data:
