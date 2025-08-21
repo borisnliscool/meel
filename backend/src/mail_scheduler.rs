@@ -43,21 +43,22 @@ async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode>
 }
 
 fn get_smtp_transport() -> Result<SmtpTransport, String> {
-    let smtp_username = match utils::env::get_var("MEEL_SMTP_USERNAME", None) {
-        Some(username) => username,
-        None => return Err("MEEL_SMTP_USERNAME must be set".to_string())
-    };
-
-    let smtp_password = match utils::env::get_var("MEEL_SMTP_PASSWORD", None) {
-        Some(password) => password,
-        None => return Err("MEEL_SMTP_PASSWORD must be set".to_string())
-    };
-
-    let creds = Credentials::new(smtp_username, smtp_password);
     let smtp_relay = utils::env::get_var("MEEL_SMTP_RELAY", None);
 
-    let mailer = if smtp_relay.is_some() {
-        match SmtpTransport::relay(&smtp_relay.unwrap()) {
+    let mailer = if let Some(smtp_relay) = smtp_relay {
+        let smtp_username = match utils::env::get_var("MEEL_SMTP_USERNAME", None) {
+            Some(username) => username,
+            None => return Err("MEEL_SMTP_USERNAME must be set".to_string())
+        };
+
+        let smtp_password = match utils::env::get_var("MEEL_SMTP_PASSWORD", None) {
+            Some(password) => password,
+            None => return Err("MEEL_SMTP_PASSWORD must be set".to_string())
+        };
+
+        let creds = Credentials::new(smtp_username, smtp_password);
+        
+        match SmtpTransport::relay(&smtp_relay) {
             Ok(mailer) => mailer.credentials(creds).build(),
             Err(_) => return Err("Failed to build mailer".to_string())
         }

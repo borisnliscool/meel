@@ -1,0 +1,23 @@
+services:
+  mailhog:
+    image: mailhog/mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  meel:
+    build:
+      context: .
+      dockerfile: compact.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      MEEL_TRANSPORT_DOMAIN: mailhog
+      MEEL_TRANSPORT_PORT: 1025
+    volumes:
+      - ./data:/data
+
+volumes:
+  data:
