@@ -9,9 +9,9 @@ use std::sync::Arc;
 use std::time::SystemTime;
 
 use crate::database::models::{Mail, NewMail};
+use crate::templating::TemplateDataMap;
 use crate::utils::api_error::{ApiError, ApiErrorCode};
 use crate::{database, templating, utils};
-use crate::templating::TemplateDataMap;
 
 #[derive(Deserialize)]
 pub struct SendMailRequest {
@@ -126,7 +126,8 @@ pub async fn send_mail(
         // Setting allow_html to true here is a bit of a hack, as if we don't it will replace spaces
         // and special characters with html equivalents, which we don't want.
         true,
-    ).map_err(|err| {
+    )
+    .map_err(|err| {
         ApiError::new(
             StatusCode::BAD_REQUEST,
             ApiErrorCode::Unknown,
@@ -180,15 +181,23 @@ pub async fn send_mail(
 pub async fn send_mails(
     pool: Extension<Arc<database::ConnectionPool>>,
     Json(payload): Json<Vec<SendMailRequest>>,
-) -> Result<Json<Vec<SendMailResponse>>, ApiError> {
-    let mut mails: Vec<Mail> = vec![];
+) -> Result<Json<Vec<Result<SendMailResponse, ApiError>>>, ApiError> {
+    let mut mails: Vec<Result<Mail, ApiError>> = vec![];
 
     for mail_payload in payload {
-        let created_mail = send_mail(pool.clone(), mail_payload).await?;
+        let created_mail = send_mail(pool.clone(), mail_payload).await;
         mails.push(created_mail);
     }
 
-    Ok(Json(mails.into_iter().map(SendMailResponse::new).collect()))
+    Ok(Json(
+        mails
+            .into_iter()
+            .map(|mail| match mail {
+                Ok(mail) => Ok(SendMailResponse::new(mail)),
+                Err(err) => Err(err),
+            })
+            .collect(),
+    ))
 }
 
 pub async fn get_mail_status(

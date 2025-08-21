@@ -11,9 +11,9 @@ pub enum ApiErrorCode {
     NotFound,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ApiError {
-    pub status_code: StatusCode,
+    pub status_code: u16,
     pub error_code: ApiErrorCode,
     pub message: String,
     pub details: HashMap<String, String>,
@@ -22,7 +22,7 @@ pub struct ApiError {
 impl ApiError {
     pub fn new(status_code: StatusCode, error_code: ApiErrorCode, message: String, details: HashMap<String, String>) -> Self {
         Self {
-            status_code,
+            status_code: status_code.as_u16(),
             error_code,
             message,
             details,
@@ -33,12 +33,13 @@ impl ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let body = json!({
-            "status_code": self.status_code.as_u16(),
+            "status_code": self.status_code,
             "error_code": self.error_code,
             "message": self.message,
             "details": self.details
         });
 
-        (self.status_code, body.to_string()).into_response()
+        // this unwrap should be safe, as we have a valid status code
+        (StatusCode::from_u16(self.status_code).unwrap(), body.to_string()).into_response()
     }
 }

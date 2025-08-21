@@ -80,7 +80,7 @@ diesel migration run
 - [x] Templating engine
     - [ ] Component system
     - [ ] i18n
-    - [ ] simple if and for logic
+    - [x] simple if and for logic
 - API Routes
     - [x] Sending mail
         - [x] Send to mailing list
