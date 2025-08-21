@@ -7,6 +7,7 @@ on:
     paths:
       - "backend/**"
       - "Dockerfile"
+      - "compact.Dockerfile"
       - ".github/workflows/ci-backend.yml"
   pull_request:
     branches:
@@ -14,6 +15,7 @@ on:
     paths:
       - "backend/**"
       - "Dockerfile"
+      - "compact.Dockerfile"
 
 jobs:
   build-regular:
