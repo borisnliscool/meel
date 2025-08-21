@@ -39,7 +39,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./data:/usr/src/meel/data
+      - ./data:/data
 
 volumes:
   db_data:

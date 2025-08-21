@@ -1,6 +1,12 @@
 import { Try } from '@borisnl/tried';
 import ky from 'ky';
-import { Meel, MeelError, MeelErrorConstructor, SentMeel, SentMeelConstructor } from '.';
+import {
+	Meel,
+	MeelError,
+	MeelErrorConstructor,
+	SentMeel,
+	SentMeelConstructor,
+} from '.';
 
 /**
  * MeelSender is a class that sends Meel instances to a specified base url.
@@ -36,7 +42,7 @@ export class MeelSender {
 	 * @return {Promise<SentMeel>} SentMeel instance
 	 * @throws {MeelError} If the mail could not be sent
 	 */
-	public async send(mail: Meel): Promise<(SentMeel | MeelError)> {
+	public async send(mail: Meel): Promise<SentMeel | MeelError> {
 		return this.batchSend([mail]).then(data => data[0]);
 	}
 
@@ -50,11 +56,16 @@ export class MeelSender {
 	public async batchSend(mails: Meel[]): Promise<(SentMeel | MeelError)[]> {
 		const response = await Try(() =>
 			ky
-				.post<({
-					Ok: SentMeelConstructor
-				} | {
-					Err: MeelErrorConstructor
-				})[]>(`${this.baseUrl}/mails/send`, {
+				.post<
+					(
+						| {
+								Ok: SentMeelConstructor;
+						  }
+						| {
+								Err: MeelErrorConstructor;
+						  }
+					)[]
+				>(`${this.baseUrl}/mails/send`, {
 					body: JSON.stringify(
 						mails.map(mail => mail.toPlainObject()),
 					),
@@ -74,6 +85,8 @@ export class MeelSender {
 			});
 		}
 
-		return response.map((data) => ('Ok' in data) ? new SentMeel(data.Ok) : new MeelError(data.Err));
+		return response.map(data =>
+			'Ok' in data ? new SentMeel(data.Ok) : new MeelError(data.Err),
+		);
 	}
 }
