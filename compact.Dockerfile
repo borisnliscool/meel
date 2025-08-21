@@ -12,18 +12,19 @@ COPY LICENSE LICENSE
 
 RUN cargo build --release
 
+FROM rust:1.88-slim-bookworm AS diesel-builder
+RUN apt-get update && apt-get install -y libpq-dev libssl-dev pkg-config
+RUN cargo install diesel_cli --no-default-features --features postgres
+
 FROM debian:bookworm-slim
 
-RUN apt update && apt install -y \
-    libpq-dev libssl-dev pkg-config curl xz-utils postgresql postgresql-contrib \
- && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 libssl3 curl xz-utils postgresql postgresql-contrib \
+  && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/usr/lib/postgresql/15/bin:/usr/local/bin:${PATH}"
 
-RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/diesel-rs/diesel/releases/latest/download/diesel_cli-installer.sh | sh \
- && cp /root/.cargo/bin/diesel /usr/local/bin/diesel \
- && chmod +x /usr/local/bin/diesel
-
+COPY --from=diesel-builder /usr/local/cargo/bin/diesel /usr/local/bin/
 COPY --from=builder /usr/src/meel/target/release/meel /usr/local/bin/meel
 COPY backend/migrations migrations/
 

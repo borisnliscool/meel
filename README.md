@@ -16,6 +16,8 @@ required to make widespread changes.
 To use Meel, you can either compile the backend yourself, or use the automatically built Docker image. The Docker image
 is available on GitHub at [borisnliscool/meel](https://github.com/borisnliscool/meel/pkgs/container/meel).
 
+Meel also has a compact version that has integrated Postgres database. The Docker image for that is available on GitHub at [borisnliscool/meel-compact](https://github.com/borisnliscool/meel/pkgs/container/meel-compact).
+
 **Example**
 
 ```yml
