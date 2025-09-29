@@ -5,20 +5,22 @@ use tokio::net::TcpListener;
 
 use crate::database::ConnectionPool;
 
-mod templating;
-mod server;
 mod database;
-mod routes;
-mod utils;
 mod mail_scheduler;
+mod routes;
+mod server;
 
 async fn start_web_server(shared_pool: Arc<ConnectionPool>) {
-    let address = utils::env::get_var("MEEL_HOST", Some("0.0.0.0:8080")).unwrap();
-    let listener = TcpListener::bind(address.clone()).await.expect("Failed to bind address");
+    let address = meel_utils::env::get_var("MEEL_HOST", Some("0.0.0.0:8080")).unwrap();
+    let listener = TcpListener::bind(address.clone())
+        .await
+        .expect("Failed to bind address");
 
     tracing::info!("Webserver listening on {}", address);
     let server = server::create(shared_pool).await;
-    axum::serve(listener, server).await.expect("Failed to start server");
+    axum::serve(listener, server)
+        .await
+        .expect("Failed to start server");
 }
 
 async fn start_mail_scheduler(shared_pool: Arc<ConnectionPool>) {
@@ -29,7 +31,13 @@ async fn start_mail_scheduler(shared_pool: Arc<ConnectionPool>) {
         tokio::spawn(mail_scheduler::send_mails(shared_pool.clone()));
 
         const DEFAULT_SLEEP_INTERVAL: u64 = 15;
-        let sleep_interval = utils::env::get_var("MEEL_SCHEDULER_INTERVAL", Some(&DEFAULT_SLEEP_INTERVAL.to_string())).unwrap().parse::<u64>().unwrap_or(DEFAULT_SLEEP_INTERVAL);
+        let sleep_interval = meel_utils::env::get_var(
+            "MEEL_SCHEDULER_INTERVAL",
+            Some(&DEFAULT_SLEEP_INTERVAL.to_string()),
+        )
+        .unwrap()
+        .parse::<u64>()
+        .unwrap_or(DEFAULT_SLEEP_INTERVAL);
 
         tokio::time::sleep(tokio::time::Duration::from_secs(sleep_interval)).await;
     }
@@ -48,16 +56,12 @@ async fn main() {
 
     {
         let pool = Arc::clone(&shared_pool);
-        tokio::spawn(async move {
-            start_web_server(pool).await
-        });
+        tokio::spawn(async move { start_web_server(pool).await });
     }
 
     {
         let pool = Arc::clone(&shared_pool);
-        tokio::spawn(async move {
-            start_mail_scheduler(pool).await
-        });
+        tokio::spawn(async move { start_mail_scheduler(pool).await });
     }
 
     loop {

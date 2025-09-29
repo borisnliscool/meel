@@ -16,7 +16,8 @@ required to make widespread changes.
 To use Meel, you can either compile the backend yourself, or use the automatically built Docker image. The Docker image
 is available on GitHub at [borisnliscool/meel](https://github.com/borisnliscool/meel/pkgs/container/meel).
 
-Meel also has a compact version that has integrated Postgres database. The Docker image for that is available on GitHub at [borisnliscool/meel-compact](https://github.com/borisnliscool/meel/pkgs/container/meel-compact).
+Meel also has a compact version that has integrated Postgres database. The Docker image for that is available on GitHub
+at [borisnliscool/meel-compact](https://github.com/borisnliscool/meel/pkgs/container/meel-compact).
 
 **Example**
 
@@ -49,13 +50,14 @@ volumes:
 
 ### Repository overview
 
-This monorepo includes the main API, SDKs for supported languages, and tools to simplify the use of Meel templating syntax. 
+This monorepo includes the main API, SDKs for supported languages, and tools to simplify the use of Meel templating
+syntax.
 Refer to the individual SDK directories for detailed documentation.
 
-| Directory                                     | Description                            |
-|-----------------------------------------------|----------------------------------------|
-| [backend](./backend)                          | Core API functionality                 |
-| [sdk/node](./sdk/node)                        | Node SDK for the API                   |
+| Directory                      | Description            |
+|--------------------------------|------------------------|
+| [backend](crates/meel-backend) | Core API functionality |
+| [sdk/node](./sdk/node)         | Node SDK for the API   |
 
 <br/>
 
@@ -73,7 +75,7 @@ To create the initial database schema and relations, run the following command
 (you may need to install the diesel cli first by running `cargo install diesel_cli`):
 
 ```bash
-cd backend
+cd meel-backend
 diesel migration run
 ```
 

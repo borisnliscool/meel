@@ -1,17 +1,17 @@
+use crate::database;
+use crate::database::models::{Mail, NewMail};
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::Html;
 use axum::{Extension, Json};
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
+use meel_templating::templating;
+use meel_templating::templating::TemplateDataMap;
+use meel_utils::api_error::{ApiError, ApiErrorCode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
-
-use crate::database::models::{Mail, NewMail};
-use crate::templating::TemplateDataMap;
-use crate::utils::api_error::{ApiError, ApiErrorCode};
-use crate::{database, templating, utils};
 
 #[derive(Deserialize)]
 pub struct SendMailRequest {
@@ -49,8 +49,10 @@ impl SendMailResponse {
             recipient: mail.recipient,
             send_attempts: mail.send_attempts,
             priority: mail.priority,
-            scheduled_at: utils::time::system_time_to_iso_string(mail.scheduled_at),
-            sent_at: mail.sent_at.map(utils::time::system_time_to_iso_string),
+            scheduled_at: meel_utils::time::system_time_to_iso_string(mail.scheduled_at),
+            sent_at: mail
+                .sent_at
+                .map(meel_utils::time::system_time_to_iso_string),
             sent: mail.sent_at.is_some(),
         }
     }
@@ -94,7 +96,7 @@ pub async fn send_mail(
             }
         };
 
-        match utils::time::iso_string_to_system_time(iso_string) {
+        match meel_utils::time::iso_string_to_system_time(iso_string) {
             Ok(scheduled_at) => scheduled_at,
             Err(err) => {
                 return Err(ApiError::new(

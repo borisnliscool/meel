@@ -5,7 +5,9 @@ on:
     branches:
       - main
     paths:
-      - "backend/**"
+      - "crates/meel-backend/**"
+      - "crates/meel-utils/**"
+      - "crates/meel-templating/**"
       - "Dockerfile"
       - "compact.Dockerfile"
       - ".github/workflows/ci-backend.yml"
@@ -13,7 +15,9 @@ on:
     branches:
       - main
     paths:
-      - "backend/**"
+      - "crates/meel-backend/**"
+      - "crates/meel-utils/**"
+      - "crates/meel-templating/**"
       - "Dockerfile"
       - "compact.Dockerfile"
 

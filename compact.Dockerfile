@@ -5,9 +5,9 @@ RUN apt update && apt install -y \
 
 WORKDIR /usr/src/meel
 
-COPY backend/src src/
-COPY backend/Cargo.toml Cargo.toml
-COPY backend/Cargo.lock Cargo.lock
+COPY crates/ crates/
+COPY Cargo.toml Cargo.toml
+COPY Cargo.lock Cargo.lock
 COPY LICENSE LICENSE
 
 RUN cargo build --release
@@ -25,8 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PATH="/usr/lib/postgresql/15/bin:/usr/local/bin:${PATH}"
 
 COPY --from=diesel-builder /usr/local/cargo/bin/diesel /usr/local/bin/
-COPY --from=builder /usr/src/meel/target/release/meel /usr/local/bin/meel
-COPY backend/migrations migrations/
+COPY --from=builder /usr/src/meel/target/release/meel-backend /usr/local/bin/meel
+COPY crates/meel-backend/migrations migrations/
 
 RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
 

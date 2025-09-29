@@ -5,7 +5,9 @@ on:
     tags:
       - '*'
     paths:
-      - "backend/**"
+      - "crates/meel-backend/**"
+      - "crates/meel-utils/**"
+      - "crates/meel-templating/**"
       - "Dockerfile"
       - "compact.Dockerfile"
 

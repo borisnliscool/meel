@@ -1,3 +1,8 @@
 [workspace]
 resolver = "2"
-members = ["backend"]
+members = [
+    "crates/meel-backend",
+    "crates/meel-templating",
+    "crates/meel-utils"
+]
+default-members = ["crates/meel-backend"]

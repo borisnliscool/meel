@@ -1,11 +1,10 @@
 [package]
-name = "meel"
+name = "meel-backend"
 version = "0.0.6"
 edition = "2021"
 
 [dependencies]
 tokio = { version = "1.38.0", features = ["full"] }
-regex = "1.10.5"
 diesel = { version = "2.2.3", features = ["postgres", "r2d2", "chrono"] }
 dotenvy = "0.15"
 axum = "0.8.4"
@@ -15,12 +14,11 @@ tracing-subscriber = "0.3.16"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.125"
 chrono = "0.4.38"
-ammonia = "4.0.0"
 r2d2 = "0.8.10"
 lettre = "0.11.7"
 glob = "0.3.1"
-minify-html = "0.16.4"
-mustache = "0.9.0"
+meel-utils = { path = "../meel-utils" }
+meel-templating = { path = "../meel-templating" }
 
 [profile.release]
 strip = true

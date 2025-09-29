@@ -4,15 +4,14 @@ use std::time::SystemTime;
 use axum::http::StatusCode;
 use chrono::{Duration, NaiveDateTime, Utc};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, RunQueryDsl};
-use lettre::{Message, SmtpTransport, Transport};
 use lettre::message::{header, Mailbox, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
+use lettre::{Message, SmtpTransport, Transport};
 
-use crate::database::ConnectionPool;
 use crate::database::models::Mail;
-use crate::database::schema::mails::{id, scheduled_at, send_attempts, sent_at};
 use crate::database::schema::mails::dsl::mails;
-use crate::utils;
+use crate::database::schema::mails::{id, scheduled_at, send_attempts, sent_at};
+use crate::database::ConnectionPool;
 
 async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode> {
     let mut conn = match pool.get() {
@@ -21,20 +20,28 @@ async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode>
     };
 
     const DEFAULT_MAX_SEND_ATTEMPTS: i32 = 10;
-    let max_send_attempts: i32 = utils::env::get_var("MEEL_MAX_SEND_ATTEMPTS", Some(&DEFAULT_MAX_SEND_ATTEMPTS.to_string()))
-        .ok_or(&DEFAULT_MAX_SEND_ATTEMPTS.to_string()).unwrap().parse().unwrap_or(DEFAULT_MAX_SEND_ATTEMPTS);
+    let max_send_attempts: i32 = meel_utils::env::get_var(
+        "MEEL_MAX_SEND_ATTEMPTS",
+        Some(&DEFAULT_MAX_SEND_ATTEMPTS.to_string()),
+    )
+    .ok_or(&DEFAULT_MAX_SEND_ATTEMPTS.to_string())
+    .unwrap()
+    .parse()
+    .unwrap_or(DEFAULT_MAX_SEND_ATTEMPTS);
 
     let mut scheduled_mails = match mails
         .filter(scheduled_at.lt(SystemTime::now()))
         .filter(sent_at.is_null())
         .filter(send_attempts.lt(max_send_attempts))
-        .load::<Mail>(&mut conn) {
+        .load::<Mail>(&mut conn)
+    {
         Ok(scheduled_mails) => scheduled_mails,
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
 
     scheduled_mails.sort_by(|a, b| {
-        b.priority.cmp(&a.priority)
+        b.priority
+            .cmp(&a.priority)
             .then_with(|| a.scheduled_at.cmp(&b.scheduled_at))
             .then_with(|| a.send_attempts.cmp(&b.send_attempts))
     });
@@ -43,28 +50,28 @@ async fn fetch_mails(pool: Arc<ConnectionPool>) -> Result<Vec<Mail>, StatusCode>
 }
 
 fn get_smtp_transport() -> Result<SmtpTransport, String> {
-    let smtp_relay = utils::env::get_var("MEEL_SMTP_RELAY", None);
+    let smtp_relay = meel_utils::env::get_var("MEEL_SMTP_RELAY", None);
 
     let mailer = if let Some(smtp_relay) = smtp_relay {
-        let smtp_username = match utils::env::get_var("MEEL_SMTP_USERNAME", None) {
+        let smtp_username = match meel_utils::env::get_var("MEEL_SMTP_USERNAME", None) {
             Some(username) => username,
-            None => return Err("MEEL_SMTP_USERNAME must be set".to_string())
+            None => return Err("MEEL_SMTP_USERNAME must be set".to_string()),
         };
 
-        let smtp_password = match utils::env::get_var("MEEL_SMTP_PASSWORD", None) {
+        let smtp_password = match meel_utils::env::get_var("MEEL_SMTP_PASSWORD", None) {
             Some(password) => password,
-            None => return Err("MEEL_SMTP_PASSWORD must be set".to_string())
+            None => return Err("MEEL_SMTP_PASSWORD must be set".to_string()),
         };
 
         let creds = Credentials::new(smtp_username, smtp_password);
-        
+
         match SmtpTransport::relay(&smtp_relay) {
             Ok(mailer) => mailer.credentials(creds).build(),
-            Err(_) => return Err("Failed to build mailer".to_string())
+            Err(_) => return Err("Failed to build mailer".to_string()),
         }
     } else {
-        let transport_domain = utils::env::get_var("MEEL_TRANSPORT_DOMAIN", Some("mailhog"));
-        let transport_port = utils::env::get_var("MEEL_TRANSPORT_PORT", Some("1025"));
+        let transport_domain = meel_utils::env::get_var("MEEL_TRANSPORT_DOMAIN", Some("mailhog"));
+        let transport_port = meel_utils::env::get_var("MEEL_TRANSPORT_PORT", Some("1025"));
 
         // We can use unwrap safely here, as we have a fallback set above.
         SmtpTransport::builder_dangerous(transport_domain.unwrap())
@@ -81,37 +88,46 @@ async fn remove_old_sent_emails(pool: Arc<ConnectionPool>) {
         Err(_) => return,
     };
 
-    let retention_days = utils::env::get_var("MEEL_SENT_EMAIL_RETENTION_DAYS", Some("30")).unwrap().parse::<i64>().unwrap_or(30);
+    let retention_days = meel_utils::env::get_var("MEEL_SENT_EMAIL_RETENTION_DAYS", Some("30"))
+        .unwrap()
+        .parse::<i64>()
+        .unwrap_or(30);
 
     #[allow(deprecated)]
-    let expiry_date = NaiveDateTime::from_timestamp(Utc::now().timestamp() - Duration::days(retention_days).num_seconds(), 0);
+    let expiry_date = NaiveDateTime::from_timestamp(
+        Utc::now().timestamp() - Duration::days(retention_days).num_seconds(),
+        0,
+    );
 
     match diesel::delete(mails.filter(sent_at.is_not_null().and(sent_at.lt(expiry_date))))
-        .execute(&mut conn) {
-        Ok(affected_rows) => if affected_rows > 0 {
-            tracing::info!("Deleted {} expired sent emails", affected_rows);
-        },
-        Err(_) => tracing::error!("Failed to delete sent emails")
+        .execute(&mut conn)
+    {
+        Ok(affected_rows) => {
+            if affected_rows > 0 {
+                tracing::info!("Deleted {} expired sent emails", affected_rows);
+            }
+        }
+        Err(_) => tracing::error!("Failed to delete sent emails"),
     }
 }
 
 async fn send_mail(mail: Mail) -> Result<(), String> {
     let from_email: Mailbox = match mail.sender.parse() {
         Ok(email) => email,
-        Err(_) => return Err("Failed to parse sender email".to_string())
+        Err(_) => return Err("Failed to parse sender email".to_string()),
     };
 
     let reply_to_email: Mailbox = match mail.reply_to {
         Some(reply_to) => match reply_to.parse() {
             Ok(email) => email,
-            Err(_) => return Err("Failed to parse reply to email".to_string())
+            Err(_) => return Err("Failed to parse reply to email".to_string()),
         },
-        None => from_email.clone()
+        None => from_email.clone(),
     };
 
     let to_email: Mailbox = match mail.recipient.parse() {
         Ok(email) => email,
-        Err(_) => return Err("Failed to parse recipient email".to_string())
+        Err(_) => return Err("Failed to parse recipient email".to_string()),
     };
 
     let email = match Message::builder()
@@ -124,35 +140,35 @@ async fn send_mail(mail: Mail) -> Result<(), String> {
                 .singlepart(
                     SinglePart::builder()
                         .header(header::ContentType::TEXT_PLAIN)
-                        .body(mail.text_body)
+                        .body(mail.text_body),
                 )
                 .singlepart(
                     SinglePart::builder()
                         .header(header::ContentType::TEXT_HTML)
-                        .body(mail.html_body)
-                )
+                        .body(mail.html_body),
+                ),
         ) {
         Ok(email) => email,
-        Err(_) => return Err("Failed to build email".to_string())
+        Err(_) => return Err("Failed to build email".to_string()),
     };
 
     let mailer = get_smtp_transport()?;
 
     match mailer.send(&email) {
         Ok(_) => Ok(()),
-        Err(err) => Err(err.to_string())
+        Err(err) => Err(err.to_string()),
     }
 }
 
 pub async fn send_mails(pool: Arc<ConnectionPool>) {
     let scheduled_mails = match fetch_mails(pool.clone()).await {
         Ok(scheduled_mails) => scheduled_mails,
-        Err(_) => return
+        Err(_) => return,
     };
 
     let mut conn = match pool.get() {
         Ok(conn) => conn,
-        Err(_) => return
+        Err(_) => return,
     };
 
     for mail in scheduled_mails {
@@ -160,17 +176,19 @@ pub async fn send_mails(pool: Arc<ConnectionPool>) {
             Ok(_) => {
                 match diesel::update(mails.filter(id.eq(mail.id)))
                     .set(sent_at.eq(SystemTime::now()))
-                    .execute(&mut conn) {
+                    .execute(&mut conn)
+                {
                     Ok(_) => tracing::info!("Sent mail {} to {}", mail.id, mail.recipient),
-                    Err(_) => tracing::error!("Failed to update mail {}", mail.id)
+                    Err(_) => tracing::error!("Failed to update mail {}", mail.id),
                 }
             }
             Err(err) => {
                 match diesel::update(mails.filter(id.eq(mail.id)))
                     .set(send_attempts.eq(send_attempts + 1))
-                    .execute(&mut conn) {
+                    .execute(&mut conn)
+                {
                     Ok(_) => tracing::error!("Failed to send mail {}: {}", mail.id, err),
-                    Err(_) => tracing::error!("Failed to update mail {}", mail.id)
+                    Err(_) => tracing::error!("Failed to update mail {}", mail.id),
                 }
             }
         }

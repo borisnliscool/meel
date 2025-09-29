@@ -1,4 +1,3 @@
-use crate::utils;
 use ammonia::clean_text;
 use minify_html::{minify, Cfg};
 use regex::Regex;
@@ -13,14 +12,14 @@ pub type TemplateDataMap = HashMap<String, Value>;
 pub fn get_template_directory() -> String {
     format!(
         "{}/templates",
-        utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap()
+        meel_utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap()
     )
 }
 
 fn get_globals() -> Result<TemplateDataMap, String> {
     let globals_path = format!(
         "{}/globals.json",
-        utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap()
+        meel_utils::env::get_var("MEEL_DATA_DIRECTORY", Some("./data")).unwrap()
     );
 
     let mut file = match File::open(globals_path) {
