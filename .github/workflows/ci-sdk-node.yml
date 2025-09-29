@@ -3,13 +3,13 @@ name: CI Node SDK
 on:
   push:
     branches:
-      - main
+      - '*'
     paths:
       - "sdk/node/**"
       - ".github/workflows/ci-sdk-node.yml"
   pull_request:
     branches:
-      - main
+      - '*'
     paths:
       - "sdk/node/**"
 

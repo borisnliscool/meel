@@ -3,7 +3,7 @@ name: CI Backend
 on:
   push:
     branches:
-      - main
+      - '*'
     paths:
       - "crates/meel-backend/**"
       - "crates/meel-utils/**"
@@ -13,7 +13,7 @@ on:
       - ".github/workflows/ci-backend.yml"
   pull_request:
     branches:
-      - main
+      - '*'
     paths:
       - "crates/meel-backend/**"
       - "crates/meel-utils/**"
