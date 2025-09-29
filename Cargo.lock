@@ -1208,7 +1208,7 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
 name = "meel-backend"
-version = "0.0.6"
+version = "1.0.0"
 dependencies = [
  "axum",
  "chrono",
@@ -1220,7 +1220,6 @@ dependencies = [
  "meel-utils",
  "r2d2",
  "serde",
- "serde_json",
  "tokio",
  "tower-http",
  "tracing",

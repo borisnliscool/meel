@@ -13,27 +13,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    mailing_list_subscribers (id) {
-        id -> Int4,
-        created_at -> Nullable<Timestamp>,
-        updated_at -> Nullable<Timestamp>,
-        email -> Text,
-        mailing_list_id -> Int4,
-        name -> Text,
-    }
-}
-
-diesel::table! {
-    mailing_lists (id) {
-        id -> Int4,
-        created_at -> Nullable<Timestamp>,
-        updated_at -> Nullable<Timestamp>,
-        name -> Text,
-        description -> Text,
-    }
-}
-
-diesel::table! {
     mails (id) {
         id -> Int4,
         created_at -> Nullable<Timestamp>,
@@ -52,11 +31,8 @@ diesel::table! {
 }
 
 diesel::joinable!(mail_attachments -> mails (mail_id));
-diesel::joinable!(mailing_list_subscribers -> mailing_lists (mailing_list_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     mail_attachments,
-    mailing_list_subscribers,
-    mailing_lists,
     mails,
 );

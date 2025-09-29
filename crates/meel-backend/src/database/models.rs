@@ -2,8 +2,6 @@ use std::time::SystemTime;
 
 use diesel::prelude::*;
 
-use crate::database::schema::mailing_list_subscribers;
-use crate::database::schema::mailing_lists;
 use crate::database::schema::mails;
 
 #[derive(Queryable, Selectable, Clone)]
@@ -23,7 +21,7 @@ pub struct Mail {
     pub priority: i32,
     pub sent_at: Option<SystemTime>,
     pub scheduled_at: SystemTime,
-    pub reply_to: Option<String>
+    pub reply_to: Option<String>,
 }
 
 #[derive(Insertable)]
@@ -38,44 +36,4 @@ pub struct NewMail<'a> {
     pub priority: i32,
     pub scheduled_at: SystemTime,
     pub reply_to: Option<&'a str>,
-}
-
-#[derive(Queryable, Selectable)]
-#[diesel(table_name = mailing_lists)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-#[allow(dead_code)]
-pub struct MailingList {
-    pub id: i32,
-    pub created_at: Option<SystemTime>,
-    pub updated_at: Option<SystemTime>,
-    pub name: String,
-    pub description: String,
-}
-
-#[derive(Insertable)]
-#[diesel(table_name = mailing_lists)]
-pub struct NewMailingList<'a> {
-    pub name: &'a str,
-    pub description: &'a str,
-}
-
-#[derive(Queryable, Selectable)]
-#[diesel(table_name = mailing_list_subscribers)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-#[allow(dead_code)]
-pub struct MailingListSubscriber {
-    pub id: i32,
-    pub created_at: Option<SystemTime>,
-    pub updated_at: Option<SystemTime>,
-    pub email: String,
-    pub name: String,
-    pub mailing_list_id: i32,
-}
-
-#[derive(Insertable)]
-#[diesel(table_name = mailing_list_subscribers)]
-pub struct NewMailingListSubscriber<'a> {
-    pub email: &'a str,
-    pub name: &'a str,
-    pub mailing_list_id: i32,
 }
