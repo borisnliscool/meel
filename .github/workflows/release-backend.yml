@@ -8,8 +8,8 @@ on:
       - "crates/meel-backend/**"
       - "crates/meel-utils/**"
       - "crates/meel-templating/**"
-      - "Dockerfile"
-      - "compact.Dockerfile"
+      - "../../docker/Dockerfile"
+      - "../../docker/full.Dockerfile"
 
 jobs:
   build-regular:
@@ -34,8 +34,8 @@ jobs:
             borisnl/meel:${{ github.ref_name }}
             borisnl/meel:latest
 
-  build-compact:
-    name: Release Backend Compact
+  build-full:
+    name: Release Backend Full
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -50,8 +50,8 @@ jobs:
       - name: Docker build and push
         uses: docker/build-push-action@v3
         with:
-          file: ./compact.Dockerfile
+          file: ./full.Dockerfile
           push: true
           tags: |
-            borisnl/meel-compact:${{ github.ref_name }}
-            borisnl/meel-compact:latest
+            borisnl/meel-full:${{ github.ref_name }}
+            borisnl/meel-full:latest

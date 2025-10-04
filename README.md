@@ -15,8 +15,8 @@ ensures consistency across email campaigns while reducing the time and effort re
 To use Meel, you can either compile the backend yourself, or use the automatically built Docker image. The Docker image
 is available on GitHub at [borisnliscool/meel](https://github.com/borisnliscool/meel/pkgs/container/meel).
 
-Meel also has a compact version that has integrated Postgres database. The Docker image for that is available on GitHub
-at [borisnliscool/meel-compact](https://github.com/borisnliscool/meel/pkgs/container/meel-compact).
+Meel also has a `full` docker image that has integrated Postgres database. The image is available on GitHub
+at [borisnliscool/meel-full](https://github.com/borisnliscool/meel/pkgs/container/meel-full).
 
 **Example**
 

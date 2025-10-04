@@ -8,8 +8,8 @@ on:
       - "crates/meel-backend/**"
       - "crates/meel-utils/**"
       - "crates/meel-templating/**"
-      - "Dockerfile"
-      - "compact.Dockerfile"
+      - "docker/Dockerfile"
+      - "docker/full.Dockerfile"
       - ".github/workflows/ci-backend.yml"
   pull_request:
     branches:
@@ -18,8 +18,8 @@ on:
       - "crates/meel-backend/**"
       - "crates/meel-utils/**"
       - "crates/meel-templating/**"
-      - "Dockerfile"
-      - "compact.Dockerfile"
+      - "docker/Dockerfile"
+      - "docker/full.Dockerfile"
 
 jobs:
   build-regular:
@@ -55,8 +55,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.tag }}
 
-  build-compact:
-    name: Build Backend Compact
+  build-full:
+    name: Build Backend Full
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -74,9 +74,9 @@ jobs:
         id: set_tag
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-              echo "tag=ghcr.io/borisnliscool/meel-compact:latest" >> $GITHUB_ENV
+              echo "tag=ghcr.io/borisnliscool/meel-full:latest" >> $GITHUB_ENV
           else
-              echo "tag=ghcr.io/borisnliscool/meel-compact:${GITHUB_REF##*/}" >> $GITHUB_ENV
+              echo "tag=ghcr.io/borisnliscool/meel-full:${GITHUB_REF##*/}" >> $GITHUB_ENV
           fi
         shell: bash
 
@@ -84,6 +84,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./compact.Dockerfile
+          file: ./full.Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.tag }}

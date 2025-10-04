@@ -4,19 +4,19 @@ services:
     restart: unless-stopped
     shm_size: 128mb
     env_file:
-      - .env.production
+      - ../.env.production
     volumes:
       - data:/var/lib/postgresql/data
 
   meel:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8080:8080"
     env_file:
-      - .env.production
+      - ../.env.production
     depends_on:
       - db
     volumes:

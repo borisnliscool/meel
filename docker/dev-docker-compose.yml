@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     shm_size: 128mb
     env_file:
-      - .env
+      - ../.env
     ports:
       - "5432:5432"
     volumes:
