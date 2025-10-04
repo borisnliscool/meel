@@ -8,8 +8,8 @@ on:
       - "crates/meel-backend/**"
       - "crates/meel-utils/**"
       - "crates/meel-templating/**"
-      - "../../docker/Dockerfile"
-      - "../../docker/full.Dockerfile"
+      - "docker/Dockerfile"
+      - "docker/full.Dockerfile"
 
 jobs:
   build-regular:
@@ -28,7 +28,7 @@ jobs:
       - name: Docker build and push
         uses: docker/build-push-action@v3
         with:
-          file: ./Dockerfile
+          file: ./docker/Dockerfile
           push: true
           tags: |
             borisnl/meel:${{ github.ref_name }}
@@ -50,7 +50,7 @@ jobs:
       - name: Docker build and push
         uses: docker/build-push-action@v3
         with:
-          file: ./full.Dockerfile
+          file: ./docker/full.Dockerfile
           push: true
           tags: |
             borisnl/meel-full:${{ github.ref_name }}
